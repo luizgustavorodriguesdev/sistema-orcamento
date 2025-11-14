@@ -23,9 +23,9 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 anotacoes.txt
-.zip
 .rar
-.7z
-app.zip
-sistema-orcamentos 11112025.rar
-sistema-orcamentos v1.rar
+.zip
+*.bak
+sistema-orcamentos.rar
+sistema-orcamentos.zip
+
