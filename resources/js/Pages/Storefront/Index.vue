@@ -139,7 +139,36 @@ const showToastNotification = (message) => {
 
          <!-- RODAPÉ -->
         <footer class="bg-gray-800 text-white mt-12">
-            <!-- ... (código do rodapé) ... -->
+            <div class="container mx-auto px-4 py-8">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div>
+                        <h3 class="text-xl font-bold mb-4">{{ settings.company_name || 'OrçaBrindes' }}</h3>
+                        <p class="text-gray-400">{{ settings.company_address || 'Endereço não informado' }}</p>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold mb-4">Contacto</h3>
+                        <p class="text-gray-400">Email: {{ settings.company_email || 'email@exemplo.com' }}</p>
+                        <p class="text-gray-400">Telefone: {{ settings.company_phone || '(00) 0000-0000' }}</p>
+                    </div>
+                    <div>
+                        <h3 class="text-xl font-bold mb-4">Redes Sociais</h3>
+                        <div class="flex space-x-4">
+                           <a v-if="settings.company_facebook" :href="settings.company_facebook" target="_blank" class="text-gray-400 hover:text-white">Facebook</a>
+                           <a v-if="settings.company_instagram" :href="settings.company_instagram" target="_blank" class="text-gray-400 hover:text-white">Instagram</a>
+                           <a v-if="settings.company_linkedin" :href="settings.company_linkedin" target="_blank" class="text-gray-400 hover:text-white">LinkedIn</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-center text-gray-500 mt-8 border-t border-gray-700 pt-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <p>&copy; {{ new Date().getFullYear() }} {{ settings.company_name || 'OrçaBrindes' }}. Todos os direitos reservados.</p>
+                    <div class="flex items-center gap-2 text-xs">
+                        <span class="text-gray-500">Versão:</span>
+                        <span v-if="$page.props.appVersion" class="inline-flex items-center px-2 py-0.5 rounded bg-gray-700 text-gray-300 font-mono transition-colors duration-200 hover:text-white cursor-pointer">
+                            v{{ $page.props.appVersion }}
+                        </span>
+                    </div>
+                </div>
+            </div>
         </footer>
     </div>
 </template>

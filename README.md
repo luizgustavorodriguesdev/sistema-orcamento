@@ -166,8 +166,8 @@ Para rodar este projeto localmente, siga os passos abaixo:
 
     Clone o repositório:
 
-    git clone https://github.com/luizgustavorodriguesdev/sistema_orcamento.git
-    cd sistema_orcamento
+    git clone https://github.com/luizgustavorodriguesdev/sistema-orcamento.git
+    cd sistema-orcamento
 
     Instale as dependências do Composer:
 

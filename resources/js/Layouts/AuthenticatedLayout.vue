@@ -12,7 +12,7 @@ const showingNavigationDropdown = ref(false);
 
 <template>
     <div>
-        <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
+        <div class="min-h-screen flex flex-col bg-gray-100 dark:bg-gray-900">
             <nav
                 class="border-b border-gray-100 bg-white dark:border-gray-700 dark:bg-gray-800"
             >
@@ -219,9 +219,22 @@ const showingNavigationDropdown = ref(false);
             </header>
 
             <!-- Page Content -->
-            <main>
+            <main class="flex-grow">
                 <slot />
             </main>
+
+            <!-- Footer -->
+            <footer class="py-6 text-center text-xs text-gray-500 dark:text-gray-400 border-t border-gray-200 dark:border-gray-800 mt-12 bg-white dark:bg-gray-800">
+                <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <p>&copy; {{ new Date().getFullYear() }} OrçaBrindes. Todos os direitos reservados.</p>
+                    <div class="flex items-center gap-2">
+                        <span class="text-gray-400">Versão do Sistema:</span>
+                        <span v-if="$page.props.appVersion" class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 transition-transform duration-200 hover:scale-105 cursor-pointer font-mono">
+                            v{{ $page.props.appVersion }}
+                        </span>
+                    </div>
+                </div>
+            </footer>
         </div>
     </div>
 </template>

@@ -177,8 +177,14 @@ const showToastNotification = (message) => {
                         </div>
                     </div>
                 </div>
-                <div class="text-center text-gray-500 mt-8 border-t border-gray-700 pt-4">
-                    &copy; {{ new Date().getFullYear() }} {{ settings.company_name || 'OrçaBrindes' }}. Todos os direitos reservados.
+                <div class="text-center text-gray-500 mt-8 border-t border-gray-700 pt-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+                    <p>&copy; {{ new Date().getFullYear() }} {{ settings.company_name || 'OrçaBrindes' }}. Todos os direitos reservados.</p>
+                    <div class="flex items-center gap-2 text-xs">
+                        <span class="text-gray-500">Versão:</span>
+                        <span v-if="$page.props.appVersion" class="inline-flex items-center px-2 py-0.5 rounded bg-gray-700 text-gray-300 font-mono transition-colors duration-200 hover:text-white cursor-pointer">
+                            v{{ $page.props.appVersion }}
+                        </span>
+                    </div>
                 </div>
             </div>
         </footer>
