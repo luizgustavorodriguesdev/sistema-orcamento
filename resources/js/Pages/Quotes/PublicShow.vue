@@ -70,7 +70,16 @@ const whatsappLink = computed(() => {
                     <div>
                         <h3 class="text-lg font-semibold text-gray-700 mb-2">Cliente:</h3>
                         <p class="text-gray-800 font-medium">{{ quote.client_name }}</p>
-                        <p class="text-gray-600">{{ quote.client_contact }}</p>
+                        <p class="text-gray-600">E-mail: {{ quote.client_contact }}</p>
+                        <p v-if="quote.customer_phone" class="text-gray-600">Telefone: {{ quote.customer_phone }}</p>
+                        
+                        <div v-if="quote.cep" class="mt-4 p-3 bg-gray-50 border rounded-lg text-sm text-gray-600">
+                            <p class="font-semibold text-gray-700 mb-1">Endereço:</p>
+                            <p>{{ quote.address_street }}</p>
+                            <p>{{ quote.address_neighborhood }}</p>
+                            <p>{{ quote.address_city }} - {{ quote.address_state }}</p>
+                            <p>CEP: {{ quote.cep }}</p>
+                        </div>
                     </div>
                     <div class="md:text-right">
                         <h3 class="text-lg font-semibold text-gray-700 mb-2">Atendido por:</h3>
@@ -111,6 +120,13 @@ const whatsappLink = computed(() => {
                         <div v-if="quote.delivery_info">
                             <h4 class="font-semibold text-gray-700">Prazo de Entrega:</h4>
                             <p class="text-gray-600 whitespace-pre-wrap">{{ quote.delivery_info }}</p>
+                        </div>
+                        <div v-if="quote.customization_details" class="p-4 bg-blue-50 border border-blue-100 rounded-lg">
+                            <h4 class="font-semibold text-blue-800 mb-1 flex items-center gap-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                Personalização Solicitada:
+                            </h4>
+                            <p class="text-blue-900 text-sm whitespace-pre-wrap">{{ quote.customization_details }}</p>
                         </div>
                     </div>
                     <div class="text-right">

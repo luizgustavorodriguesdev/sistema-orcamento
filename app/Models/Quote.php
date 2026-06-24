@@ -1,13 +1,13 @@
 <?php
 // app/Models/Quote.php
 
-namespace App\Models; // <-- VERIFIQUE SE ESTÁ CORRETO
+namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use App\Models\Client; // <-- ADICIONE ESTA LINHA
+use App\Models\Client;
 
 class Quote extends Model
 {
@@ -15,13 +15,37 @@ class Quote extends Model
 
     protected $fillable = [
         'unique_hash',
-        'client_id', // Adicione esta linha
+        'client_id',
         'user_id',
         'status',
         'total_amount',
         'payment_terms',
         'delivery_info',
+        // --- Novos campos que adicionamos na última migração ---
+        'customer_phone',
+        'cep',
+        'address_street',
+        'address_neighborhood',
+        'address_city',
+        'address_state',
+        'customization_details',
     ];
+
+    protected $appends = [
+        'client_name',
+        'client_contact',
+    ];
+
+    public function getClientNameAttribute()
+    {
+        return $this->client ? $this->client->name : null;
+    }
+
+    public function getClientContactAttribute()
+    {
+        return $this->client ? $this->client->contact_main : null;
+    }
+
 
     public function user(): BelongsTo
     {
@@ -31,8 +55,8 @@ class Quote extends Model
     public function products(): BelongsToMany
     {
         return $this->belongsToMany(Product::class, 'quote_product')
-                    ->withPivot('quantity', 'unit_price')
-                    ->withTimestamps();
+            ->withPivot('quantity', 'unit_price')
+            ->withTimestamps();
     }
 
     /**

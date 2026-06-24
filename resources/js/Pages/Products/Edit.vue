@@ -7,7 +7,15 @@ import { ref } from 'vue';
 const props = defineProps({
     product: Object,
     categories: Array,
+    themes: Array,
+    personalization_types: Array,
+    colors: Array,
+    characteristics: Array,
 });
+
+const getIds = (relation) => {
+    return relation ? relation.map(item => item.id) : [];
+};
 
 // O Inertia tem uma forma especial de lidar com formulários que contêm ficheiros.
 // Em vez de 'put', usamos 'post' e adicionamos um campo '_method' para simular um PUT.
@@ -20,7 +28,11 @@ const form = useForm({
     category_id: props.product.category_id,
     main_image: null,
     gallery_images: [],
-     price_tiers: props.product.price_tiers || [],
+    price_tiers: props.product.price_tiers || [],
+    themes: getIds(props.product.themes),
+    personalization_types: getIds(props.product.personalization_types || props.product.personalizationTypes),
+    colors: getIds(props.product.colors),
+    characteristics: getIds(props.product.characteristics),
 });
 
 // --- Lógica para as Escalas de Preços ---
@@ -183,8 +195,69 @@ const galleryImages = props.product.images.filter(img => !img.is_main);
                                 </div>
                             </div>
 
+                            <!-- Secção de Atributos para Filtros -->
+                            <div class="mt-6 pt-6 border-t">
+                                <h3 class="text-lg font-medium text-gray-900">Atributos de Filtragem (Selecione as opções)</h3>
+                                <p class="text-xs text-gray-500 mb-4">Escolha os termos cadastrados no sistema que serão associados a este produto.</p>
+                                
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <!-- Temas -->
+                                    <div>
+                                        <label class="block font-medium text-sm text-gray-700 mb-2">Temas</label>
+                                        <div class="space-y-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-3 bg-gray-50 custom-scrollbar">
+                                            <label v-for="theme in themes" :key="theme.id" class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer hover:text-blue-600">
+                                                <input type="checkbox" :value="theme.id" v-model="form.themes" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                                                <span>{{ theme.name }}</span>
+                                            </label>
+                                            <p v-if="themes.length === 0" class="text-xs text-gray-400">Nenhum tema cadastrado.</p>
+                                        </div>
+                                        <p v-if="form.errors.themes" class="text-sm text-red-600 mt-2">{{ form.errors.themes }}</p>
+                                    </div>
+
+                                    <!-- Tipo de Personalização -->
+                                    <div>
+                                        <label class="block font-medium text-sm text-gray-700 mb-2">Tipo de Personalização</label>
+                                        <div class="space-y-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-3 bg-gray-50 custom-scrollbar">
+                                            <label v-for="pers in personalization_types" :key="pers.id" class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer hover:text-blue-600">
+                                                <input type="checkbox" :value="pers.id" v-model="form.personalization_types" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                                                <span>{{ pers.name }}</span>
+                                            </label>
+                                            <p v-if="personalization_types.length === 0" class="text-xs text-gray-400">Nenhuma personalização cadastrada.</p>
+                                        </div>
+                                        <p v-if="form.errors.personalization_types" class="text-sm text-red-600 mt-2">{{ form.errors.personalization_types }}</p>
+                                    </div>
+
+                                    <!-- Cores -->
+                                    <div>
+                                        <label class="block font-medium text-sm text-gray-700 mb-2">Cores</label>
+                                        <div class="space-y-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-3 bg-gray-50 custom-scrollbar">
+                                            <label v-for="color in colors" :key="color.id" class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer hover:text-blue-600">
+                                                <input type="checkbox" :value="color.id" v-model="form.colors" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                                                <span class="w-4 h-4 rounded-full border border-gray-300 block shadow-sm flex-shrink-0" :style="{ backgroundColor: color.hex_code || '#fff' }"></span>
+                                                <span>{{ color.name }}</span>
+                                            </label>
+                                            <p v-if="colors.length === 0" class="text-xs text-gray-400">Nenhuma cor cadastrada.</p>
+                                        </div>
+                                        <p v-if="form.errors.colors" class="text-sm text-red-600 mt-2">{{ form.errors.colors }}</p>
+                                    </div>
+
+                                    <!-- Características -->
+                                    <div>
+                                        <label class="block font-medium text-sm text-gray-700 mb-2">Características</label>
+                                        <div class="space-y-2 max-h-40 overflow-y-auto border border-gray-200 rounded-lg p-3 bg-gray-50 custom-scrollbar">
+                                            <label v-for="char in characteristics" :key="char.id" class="flex items-center gap-2 text-sm text-gray-600 cursor-pointer hover:text-blue-600">
+                                                <input type="checkbox" :value="char.id" v-model="form.characteristics" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500" />
+                                                <span>{{ char.name }}</span>
+                                            </label>
+                                            <p v-if="characteristics.length === 0" class="text-xs text-gray-400">Nenhuma característica cadastrada.</p>
+                                        </div>
+                                        <p v-if="form.errors.characteristics" class="text-sm text-red-600 mt-2">{{ form.errors.characteristics }}</p>
+                                    </div>
+                                </div>
+                            </div>
+
                             <!-- Botão de Submissão -->
-                            <div class="flex items-center justify-end mt-4">
+                            <div class="flex items-center justify-end mt-6">
                                 <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
                                     {{ form.processing ? 'A Atualizar...' : 'Atualizar Produto' }}
                                 </button>

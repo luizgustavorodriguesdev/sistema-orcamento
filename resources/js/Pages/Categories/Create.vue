@@ -6,6 +6,8 @@ import { Head, useForm } from '@inertiajs/vue3';
 const form = useForm({
     name: '',
     description: '',
+    is_featured: false,
+    image: null,
 });
 
 // Função de submissão do formulário.
@@ -36,18 +38,34 @@ const submit = () => {
                             </div>
 
                             <!-- Campo Descrição -->
-                            <div class="mt-4">
-                                <label for="description" class="block font-medium text-sm text-gray-700">Descrição (Opcional)</label>
-                                <textarea id="description" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" v-model="form.description"></textarea>
-                                <p v-if="form.errors.description" class="text-sm text-red-600 mt-2">{{ form.errors.description }}</p>
-                            </div>
+                             <div class="mt-4">
+                                 <label for="description" class="block font-medium text-sm text-gray-700">Descrição (Opcional)</label>
+                                 <textarea id="description" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" v-model="form.description"></textarea>
+                                 <p v-if="form.errors.description" class="text-sm text-red-600 mt-2">{{ form.errors.description }}</p>
+                             </div>
 
-                            <!-- Botão de Submissão -->
-                            <div class="flex items-center justify-end mt-4">
-                                <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
-                                    {{ form.processing ? 'A Guardar...' : 'Guardar Categoria' }}
-                                </button>
-                            </div>
+                             <!-- Campo Imagem -->
+                             <div class="mt-4">
+                                 <label for="image" class="block font-medium text-sm text-gray-700">Imagem da Categoria (Para a Vitrine)</label>
+                                 <input id="image" type="file" class="mt-1 block w-full border border-gray-300 rounded-md p-1 bg-white" @input="form.image = $event.target.files[0]" />
+                                 <p v-if="form.errors.image" class="text-sm text-red-600 mt-2">{{ form.errors.image }}</p>
+                             </div>
+
+                             <!-- Campo Destaque -->
+                             <div class="mt-4">
+                                 <label class="inline-flex items-center">
+                                     <input type="checkbox" v-model="form.is_featured" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50" />
+                                     <span class="ms-2 text-sm text-gray-600">Categoria em Destaque (será exibida na Vitrine Principal)</span>
+                                 </label>
+                                 <p v-if="form.errors.is_featured" class="text-sm text-red-600 mt-2">{{ form.errors.is_featured }}</p>
+                             </div>
+
+                             <!-- Botão de Submissão -->
+                             <div class="flex items-center justify-end mt-4">
+                                 <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" :class="{ 'opacity-25': form.processing }" :disabled="form.processing">
+                                     {{ form.processing ? 'A Guardar...' : 'Guardar Categoria' }}
+                                 </button>
+                             </div>
                         </form>
 
                     </div>

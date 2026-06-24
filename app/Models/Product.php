@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Product extends Model
 {
@@ -63,5 +64,25 @@ class Product extends Model
         // Procura e retorna a primeira imagem marcada como principal.
         // O 'first()' retorna null se não encontrar, o que é tratado no frontend.
         return $this->images()->where('is_main', true)->first();
+    }
+
+    public function themes(): BelongsToMany
+    {
+        return $this->belongsToMany(Theme::class, 'product_theme');
+    }
+
+    public function personalizationTypes(): BelongsToMany
+    {
+        return $this->belongsToMany(PersonalizationType::class, 'product_personalization_type');
+    }
+
+    public function colors(): BelongsToMany
+    {
+        return $this->belongsToMany(Color::class, 'product_color');
+    }
+
+    public function characteristics(): BelongsToMany
+    {
+        return $this->belongsToMany(Characteristic::class, 'product_characteristic');
     }
 }

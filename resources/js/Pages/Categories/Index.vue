@@ -34,23 +34,33 @@ const props = defineProps({
                         <div class="relative overflow-x-auto shadow-md sm:rounded-lg">
                             <table class="w-full text-sm text-left text-gray-500">
                                 <thead class="text-xs text-gray-700 uppercase bg-gray-50">
-                                    <tr>
-                                        <th scope="col" class="px-6 py-3">Nome</th>
-                                        <th scope="col" class="px-6 py-3">Descrição</th>
-                                        <th scope="col" class="px-6 py-3">Ações</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr v-for="category in categories.data" :key="category.id" class="bg-white border-b hover:bg-gray-50">
-                                        <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">{{ category.name }}</td>
-                                        <td class="px-6 py-4">{{ category.description }}</td>
-                                        <td class="px-6 py-4">
-                                            <Link :href="route('categories.edit', category.id)" class="font-medium text-blue-600 hover:underline mr-4">Editar</Link>
-                                            <Link :href="route('categories.destroy', category.id)" method="delete" as="button" class="font-medium text-red-600 hover:underline" preserve-scroll>Apagar</Link>
-                                        </td>
-                                    </tr>
+                                     <tr>
+                                         <th scope="col" class="px-6 py-3">Imagem</th>
+                                         <th scope="col" class="px-6 py-3">Nome</th>
+                                         <th scope="col" class="px-6 py-3">Descrição</th>
+                                         <th scope="col" class="px-6 py-3">Destaque</th>
+                                         <th scope="col" class="px-6 py-3">Ações</th>
+                                     </tr>
+                                 </thead>
+                                 <tbody>
+                                     <tr v-for="category in categories.data" :key="category.id" class="bg-white border-b hover:bg-gray-50">
+                                         <td class="px-6 py-4">
+                                             <img v-if="category.image_path" :src="`/storage/${category.image_path}`" alt="Imagem" class="w-12 h-12 object-cover rounded-md shadow-sm border" />
+                                             <span v-else class="text-xs text-gray-400">Sem imagem</span>
+                                         </td>
+                                         <td class="px-6 py-4 font-semibold text-gray-900 whitespace-nowrap">{{ category.name }}</td>
+                                         <td class="px-6 py-4">{{ category.description }}</td>
+                                         <td class="px-6 py-4">
+                                             <span v-if="category.is_featured" class="px-2 py-1 rounded bg-yellow-100 text-yellow-800 text-xs font-bold shadow-sm">Sim</span>
+                                             <span v-else class="px-2 py-1 rounded bg-gray-100 text-gray-700 text-xs shadow-sm">Não</span>
+                                         </td>
+                                         <td class="px-6 py-4">
+                                             <Link :href="route('categories.edit', category.id)" class="font-medium text-blue-600 hover:underline mr-4">Editar</Link>
+                                             <Link :href="route('categories.destroy', category.id)" method="delete" as="button" class="font-medium text-red-600 hover:underline" preserve-scroll>Apagar</Link>
+                                         </td>
+                                     </tr>
                                     <tr v-if="categories.data.length === 0">
-                                        <td colspan="3" class="px-6 py-4 text-center text-gray-500">
+                                        <td colspan="5" class="px-6 py-4 text-center text-gray-500">
                                             Nenhuma categoria encontrada.
                                         </td>
                                     </tr>

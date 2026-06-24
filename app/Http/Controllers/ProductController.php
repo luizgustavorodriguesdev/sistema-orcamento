@@ -4,6 +4,10 @@ namespace App\Http\Controllers;
 use App\Models\Product;
 use App\Models\Category;
 use App\Models\ProductImage;
+use App\Models\Theme;
+use App\Models\PersonalizationType;
+use App\Models\Color;
+use App\Models\Characteristic;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -34,6 +38,10 @@ class ProductController extends Controller
     {
         return Inertia::render('Products/Create', [
             'categories' => Category::orderBy('name')->get(),
+            'themes' => Theme::orderBy('name')->get(),
+            'personalization_types' => PersonalizationType::orderBy('name')->get(),
+            'colors' => Color::orderBy('name')->get(),
+            'characteristics' => Characteristic::orderBy('name')->get(),
         ]);
     }
 
@@ -53,14 +61,36 @@ class ProductController extends Controller
             'price_tiers' => 'nullable|array',
             'price_tiers.*.min_quantity' => 'required|integer|min:1',
             'price_tiers.*.price' => 'required|numeric|min:0',
+            'themes' => 'nullable|array',
+            'themes.*' => 'exists:themes,id',
+            'personalization_types' => 'nullable|array',
+            'personalization_types.*' => 'exists:personalization_types,id',
+            'colors' => 'nullable|array',
+            'colors.*' => 'exists:colors,id',
+            'characteristics' => 'nullable|array',
+            'characteristics.*' => 'exists:characteristics,id',
         ]);
 
 
         // Usamos uma transação para garantir que, se algo falhar, nada seja salvo.
-      DB::transaction(function () use ($request, $validated) {
-          // Gera o slug a partir do nome
-          $validated['slug'] = Str::slug($validated['name']);
-          $product = Product::create($validated);
+        DB::transaction(function () use ($request, $validated) {
+            // Gera o slug a partir do nome
+            $validated['slug'] = Str::slug($validated['name']);
+            $product = Product::create($validated);
+
+            // Sincroniza os relacionamentos Many-to-Many
+            if ($request->has('themes')) {
+                $product->themes()->sync($request->themes);
+            }
+            if ($request->has('personalization_types')) {
+                $product->personalizationTypes()->sync($request->personalization_types);
+            }
+            if ($request->has('colors')) {
+                $product->colors()->sync($request->colors);
+            }
+            if ($request->has('characteristics')) {
+                $product->characteristics()->sync($request->characteristics);
+            }
 
             // Salva as escalas de preços, se houver
             if (!empty($validated['price_tiers'])) {
@@ -93,11 +123,15 @@ class ProductController extends Controller
      */
     public function edit(Product $product): Response
     {
-        $product->load('images', 'category','priceTiers');
+        $product->load('images', 'category', 'priceTiers', 'themes', 'personalizationTypes', 'colors', 'characteristics');
 
         return Inertia::render('Products/Edit', [
             'product' => $product,
             'categories' => Category::orderBy('name')->get(),
+            'themes' => Theme::orderBy('name')->get(),
+            'personalization_types' => PersonalizationType::orderBy('name')->get(),
+            'colors' => Color::orderBy('name')->get(),
+            'characteristics' => Characteristic::orderBy('name')->get(),
         ]);
     }
 
@@ -118,12 +152,26 @@ class ProductController extends Controller
             'price_tiers' => 'nullable|array',
             'price_tiers.*.min_quantity' => 'required|integer|min:1',
             'price_tiers.*.price' => 'required|numeric|min:0',
+            'themes' => 'nullable|array',
+            'themes.*' => 'exists:themes,id',
+            'personalization_types' => 'nullable|array',
+            'personalization_types.*' => 'exists:personalization_types,id',
+            'colors' => 'nullable|array',
+            'colors.*' => 'exists:colors,id',
+            'characteristics' => 'nullable|array',
+            'characteristics.*' => 'exists:characteristics,id',
         ]);
 
         DB::transaction(function () use ($request, $product, $validated) {
             // Gera o slug a partir do nome
             $validated['slug'] = Str::slug($validated['name']);
             $product->update($validated);
+
+            // Sincroniza os relacionamentos Many-to-Many
+            $product->themes()->sync($request->themes ?? []);
+            $product->personalizationTypes()->sync($request->personalization_types ?? []);
+            $product->colors()->sync($request->colors ?? []);
+            $product->characteristics()->sync($request->characteristics ?? []);
 
             // Apaga as escalas de preços antigas e cria as novas
             $product->priceTiers()->delete();

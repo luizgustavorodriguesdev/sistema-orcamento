@@ -35,11 +35,21 @@ class CategoryController extends Controller
     public function store(Request $request): RedirectResponse
     {
         $request->validate([
-            'name' => 'required|string|max:255|unique:'.Category::class,
+            'name' => 'required|string|max:255|unique:categories',
             'description' => 'nullable|string',
+            'is_featured' => 'nullable|boolean',
+            'image' => 'nullable|image|max:2048',
         ]);
 
-        Category::create($request->all());
+        $data = $request->except('image');
+        $data['is_featured'] = $request->boolean('is_featured');
+
+        if ($request->hasFile('image')) {
+            $path = $request->file('image')->store('categories', 'public');
+            $data['image_path'] = $path;
+        }
+
+        Category::create($data);
 
         return redirect()->route('categories.index')->with('success', 'Categoria criada com sucesso.');
     }
@@ -62,9 +72,22 @@ class CategoryController extends Controller
         $request->validate([
             'name' => ['required', 'string', 'max:255', Rule::unique('categories')->ignore($category->id)],
             'description' => 'nullable|string',
+            'is_featured' => 'nullable|boolean',
+            'image' => 'nullable|image|max:2048',
         ]);
 
-        $category->update($request->all());
+        $data = $request->except('image');
+        $data['is_featured'] = $request->boolean('is_featured');
+
+        if ($request->hasFile('image')) {
+            if ($category->image_path && \Storage::disk('public')->exists($category->image_path)) {
+                \Storage::disk('public')->delete($category->image_path);
+            }
+            $path = $request->file('image')->store('categories', 'public');
+            $data['image_path'] = $path;
+        }
+
+        $category->update($data);
 
         return redirect()->route('categories.index')->with('success', 'Categoria atualizada com sucesso.');
     }

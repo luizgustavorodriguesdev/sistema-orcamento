@@ -16,7 +16,24 @@ class Category extends Model
     protected $fillable = [
         'name',
         'description',
+        'is_featured',
+        'image_path',
+        'slug',
     ];
+
+    /**
+     * O "boot" do modelo para registrar eventos.
+     */
+    protected static function boot()
+    {
+        parent::boot();
+
+        static::saving(function ($category) {
+            if (empty($category->slug) || $category->isDirty('name')) {
+                $category->slug = \Illuminate\Support\Str::slug($category->name);
+            }
+        });
+    }
 
     /**
      * RELAÇÃO: Uma categoria pode ter muitos produtos.

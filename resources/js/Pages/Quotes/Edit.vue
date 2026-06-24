@@ -15,6 +15,13 @@ const form = useForm({
     payment_terms: props.quote.payment_terms,
     delivery_info: props.quote.delivery_info,
     status: props.quote.status,
+    customer_phone: props.quote.customer_phone || '',
+    cep: props.quote.cep || '',
+    address_street: props.quote.address_street || '',
+    address_neighborhood: props.quote.address_neighborhood || '',
+    address_city: props.quote.address_city || '',
+    address_state: props.quote.address_state || '',
+    customization_details: props.quote.customization_details || '',
     items: [],
 });
 
@@ -174,10 +181,44 @@ const formatCurrency = (value) => {
                             <label for="payment_terms">Condições de Pagamento</label>
                             <textarea v-model="form.payment_terms" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></textarea>
                          </div>
-                         <div class="mt-4">
-                            <label for="delivery_info">Prazo de Entrega</label>
-                            <textarea v-model="form.delivery_info" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></textarea>
-                         </div>
+                          <div class="mt-4">
+                             <label for="delivery_info">Prazo de Entrega</label>
+                             <textarea v-model="form.delivery_info" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm"></textarea>
+                          </div>
+                          <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                             <div>
+                                 <label for="customer_phone" class="block font-medium text-sm text-gray-700">Telefone do Cliente</label>
+                                 <input type="text" id="customer_phone" v-model="form.customer_phone" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="(00) 00000-0000">
+                             </div>
+                             <div>
+                                 <label for="cep" class="block font-medium text-sm text-gray-700">CEP</label>
+                                 <input type="text" id="cep" v-model="form.cep" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="00000-000">
+                             </div>
+                          </div>
+                          <div class="mt-4 grid grid-cols-1 md:grid-cols-4 gap-4">
+                             <div class="md:col-span-3">
+                                 <label for="address_street" class="block font-medium text-sm text-gray-700">Rua / Logradouro</label>
+                                 <input type="text" id="address_street" v-model="form.address_street" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                             </div>
+                             <div>
+                                 <label for="address_state" class="block font-medium text-sm text-gray-700">Estado (UF)</label>
+                                 <input type="text" id="address_state" v-model="form.address_state" maxlength="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm uppercase">
+                             </div>
+                          </div>
+                          <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                             <div>
+                                 <label for="address_neighborhood" class="block font-medium text-sm text-gray-700">Bairro</label>
+                                 <input type="text" id="address_neighborhood" v-model="form.address_neighborhood" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                             </div>
+                             <div>
+                                 <label for="address_city" class="block font-medium text-sm text-gray-700">Cidade</label>
+                                 <input type="text" id="address_city" v-model="form.address_city" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm">
+                             </div>
+                          </div>
+                          <div class="mt-4">
+                             <label for="customization_details" class="block font-medium text-sm text-gray-700">Detalhes de Personalização</label>
+                             <textarea id="customization_details" v-model="form.customization_details" rows="3" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" placeholder="Ex: Detalhes sobre logotipo, cores..."></textarea>
+                          </div>
                         <div class="flex justify-end mt-6">
                             <button type="submit" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-6 rounded" :disabled="form.processing">
                                 {{ form.processing ? 'A Atualizar...' : 'Atualizar Orçamento' }}

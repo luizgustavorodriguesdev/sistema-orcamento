@@ -25,6 +25,8 @@ Thumbs.db
 anotacoes.txt
 .rar
 .zip
+*.zip
+*.rar
 *.bak
 sistema-orcamentos.rar
 sistema-orcamentos.zip

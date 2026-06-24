@@ -101,6 +101,13 @@ class QuoteController extends Controller
             'payment_terms' => 'nullable|string',
             'delivery_info' => 'nullable|string',
             'status' => 'required|string',
+            'customer_phone' => 'nullable|string|max:255',
+            'cep' => 'nullable|string|max:9',
+            'address_street' => 'nullable|string|max:255',
+            'address_neighborhood' => 'nullable|string|max:255',
+            'address_city' => 'nullable|string|max:255',
+            'address_state' => 'nullable|string|max:2',
+            'customization_details' => 'nullable|string',
             'items' => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity' => 'required|integer|min:1',
@@ -127,6 +134,13 @@ class QuoteController extends Controller
             'delivery_info' => $validated['delivery_info'],
             'status' => $validated['status'],
             'total_amount' => $totalAmount,
+            'customer_phone' => $validated['customer_phone'] ?? null,
+            'cep' => $validated['cep'] ?? null,
+            'address_street' => $validated['address_street'] ?? null,
+            'address_neighborhood' => $validated['address_neighborhood'] ?? null,
+            'address_city' => $validated['address_city'] ?? null,
+            'address_state' => $validated['address_state'] ?? null,
+            'customization_details' => $validated['customization_details'] ?? null,
         ]);
 
         $quote->products()->sync($itemsToSync);
