@@ -8,6 +8,9 @@ const form = useForm({
     description: '',
     is_featured: false,
     image: null,
+    meta_title: '',
+    meta_description: '',
+    meta_keywords: '',
 });
 
 // Função de submissão do formulário.
@@ -58,6 +61,30 @@ const submit = () => {
                                      <span class="ms-2 text-sm text-gray-600">Categoria em Destaque (será exibida na Vitrine Principal)</span>
                                  </label>
                                  <p v-if="form.errors.is_featured" class="text-sm text-red-600 mt-2">{{ form.errors.is_featured }}</p>
+                             </div>
+
+                             <!-- Secção de SEO -->
+                             <div class="mt-6 pt-6 border-t">
+                                 <h3 class="text-lg font-medium text-gray-900">Configurações de SEO</h3>
+                                 <p class="text-xs text-gray-500 mb-4">Insira os metadados para melhorar o ranqueamento desta categoria nos motores de busca.</p>
+                                 
+                                 <div class="space-y-4">
+                                     <div>
+                                         <label for="meta_title" class="block font-medium text-sm text-gray-700">Meta Title (Título da Página)</label>
+                                         <input id="meta_title" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" v-model="form.meta_title" placeholder="Deixe em branco para usar o nome da categoria" />
+                                         <p v-if="form.errors.meta_title" class="text-sm text-red-600 mt-2">{{ form.errors.meta_title }}</p>
+                                     </div>
+                                     <div>
+                                         <label for="meta_description" class="block font-medium text-sm text-gray-700">Meta Description (Descrição da Página)</label>
+                                         <textarea id="meta_description" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" v-model="form.meta_description" rows="3" placeholder="Insira uma descrição resumida de até 160 caracteres"></textarea>
+                                         <p v-if="form.errors.meta_description" class="text-sm text-red-600 mt-2">{{ form.errors.meta_description }}</p>
+                                     </div>
+                                     <div>
+                                         <label for="meta_keywords" class="block font-medium text-sm text-gray-700">Meta Keywords (Palavras-chave separadas por vírgula)</label>
+                                         <input id="meta_keywords" type="text" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" v-model="form.meta_keywords" placeholder="Ex: caneca personalizada, brindes corporativos, caneca de chopp" />
+                                         <p v-if="form.errors.meta_keywords" class="text-sm text-red-600 mt-2">{{ form.errors.meta_keywords }}</p>
+                                     </div>
+                                 </div>
                              </div>
 
                              <!-- Botão de Submissão -->

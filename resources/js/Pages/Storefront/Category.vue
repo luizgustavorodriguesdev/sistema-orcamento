@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, watch } from 'vue';
 import { Head, Link, router } from '@inertiajs/vue3';
+import FloatingWhatsapp from '@/Components/FloatingWhatsapp.vue';
 
 const props = defineProps({
     category: Object,
@@ -78,6 +79,28 @@ const activeCharacteristics = ref(props.selectedFilters?.characteristics || []);
 const minPrice = ref(props.selectedFilters?.min_price || '');
 const maxPrice = ref(props.selectedFilters?.max_price || '');
 
+// --- BUSCA NO CABEÇALHO ---
+const headerSearchQuery = ref('');
+const executeSearch = () => {
+    if (headerSearchQuery.value.trim()) {
+        router.get(route('storefront.search'), { q: headerSearchQuery.value });
+    }
+};
+
+// --- LINK DO WHATSAPP ---
+const whatsappUrl = computed(() => {
+    if (!props.settings.company_whatsapp) return null;
+    const cleanNumber = props.settings.company_whatsapp.replace(/\D/g, '');
+    return `https://wa.me/${cleanNumber}`;
+});
+
+const getProductWhatsappUrl = (productName) => {
+    if (!props.settings.company_whatsapp) return '#';
+    const cleanNumber = props.settings.company_whatsapp.replace(/\D/g, '');
+    const message = encodeURIComponent(`Olá! Gostaria de mais informações sobre o produto: ${productName}`);
+    return `https://wa.me/${cleanNumber}?text=${message}`;
+};
+
 const applyFilters = () => {
     router.get(route('storefront.category.show', { category: props.category.slug }), {
         sort: selectedSort.value,
@@ -150,7 +173,28 @@ const openDropdown = ref(null);
 </script>
 
 <template>
-    <Head :title="`${category.name} - Categoria`" />
+    <Head>
+        <title>{{ category.meta_title || `${category.name} - Categoria` }}</title>
+        <meta name="description" :content="category.meta_description || category.description || 'Confira nossos produtos personalizados.'" />
+        <meta name="keywords" :content="category.meta_keywords || settings.seo_meta_keywords || 'brindes, personalizados, copos, canecas'" />
+
+        <!-- URL Canônica -->
+        <link rel="canonical" :href="$page.props.current_url" />
+
+        <!-- Open Graph / Facebook -->
+        <meta property="og:type" content="website" />
+        <meta property="og:url" :content="$page.props.current_url" />
+        <meta property="og:title" :content="category.meta_title || `${category.name} - Categoria`" />
+        <meta property="og:description" :content="category.meta_description || category.description || 'Confira nossos produtos personalizados.'" />
+        <meta property="og:image" :content="category.image_path ? `/storage/${category.image_path}` : '/images/hero_showcase.png'" />
+
+        <!-- Twitter -->
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:url" :content="$page.props.current_url" />
+        <meta property="twitter:title" :content="category.meta_title || `${category.name} - Categoria`" />
+        <meta property="twitter:description" :content="category.meta_description || category.description || 'Confira nossos produtos personalizados.'" />
+        <meta property="twitter:image" :content="category.image_path ? `/storage/${category.image_path}` : '/images/hero_showcase.png'" />
+    </Head>
 
     <!-- Notificação (Toast) -->
     <div v-if="toast.show" class="fixed top-5 right-5 bg-blue-600 text-white py-3 px-5 rounded-xl shadow-2xl z-50 transform translate-y-0 transition-transform duration-300 flex items-center gap-2 border border-blue-500">
@@ -163,17 +207,34 @@ const openDropdown = ref(null);
             <!-- BARRA SUPERIOR DE INFORMAÇÕES -->
             <div class="bg-slate-900 text-slate-300 text-xs py-2 border-b border-slate-800">
                 <div class="container mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-2 max-w-6xl">
-                    <div class="flex items-center gap-1.5">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                        <span>Entregamos para todo o Brasil</span>
+                    <div class="flex items-center gap-4">
+                        <div class="flex items-center gap-1.5">
+                            <i class="fa-solid fa-location-dot text-blue-400"></i>
+                            <span>Entregamos para todo o Brasil</span>
+                        </div>
+                        <!-- Ícones das Redes Sociais na Top Bar -->
+                        <div class="hidden sm:flex items-center gap-3 border-l border-slate-800 pl-4">
+                            <a v-if="settings.social_facebook" :href="settings.social_facebook" target="_blank" class="hover:text-blue-500 transition-colors text-sm" title="Facebook">
+                                <i class="fa-brands fa-facebook"></i>
+                            </a>
+                            <a v-if="settings.social_instagram" :href="settings.social_instagram" target="_blank" class="hover:text-rose-500 transition-colors text-sm" title="Instagram">
+                                <i class="fa-brands fa-instagram"></i>
+                            </a>
+                            <a v-if="settings.social_youtube" :href="settings.social_youtube" target="_blank" class="hover:text-red-600 transition-colors text-sm" title="YouTube">
+                                <i class="fa-brands fa-youtube"></i>
+                            </a>
+                            <a v-if="whatsappUrl" :href="whatsappUrl" target="_blank" class="hover:text-green-500 transition-colors text-sm" title="WhatsApp">
+                                <i class="fa-brands fa-whatsapp"></i>
+                            </a>
+                        </div>
                     </div>
                     <div class="flex flex-wrap items-center gap-4">
-                        <a v-if="settings.company_email" :href="`mailto:${settings.company_email}`" class="hover:text-blue-400 flex items-center gap-1 transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                        <a v-if="settings.company_email" :href="`mailto:${settings.company_email}`" class="hover:text-blue-400 flex items-center gap-1.5 transition-colors">
+                            <i class="fa-solid fa-envelope text-blue-400"></i>
                             <span>{{ settings.company_email }}</span>
                         </a>
-                        <a v-if="settings.company_phone" :href="`tel:${settings.company_phone}`" class="hover:text-blue-400 flex items-center gap-1 transition-colors">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                        <a v-if="settings.company_phone" :href="`tel:${settings.company_phone}`" class="hover:text-blue-400 flex items-center gap-1.5 transition-colors">
+                            <i class="fa-solid fa-phone text-blue-400"></i>
                             <span>{{ settings.company_phone }}</span>
                         </a>
                     </div>
@@ -182,15 +243,30 @@ const openDropdown = ref(null);
 
             <!-- CABEÇALHO PRINCIPAL -->
             <header class="bg-white shadow-sm sticky top-0 z-40">
-                <div class="container mx-auto px-4 py-4 flex justify-between items-center max-w-6xl">
+                <div class="container mx-auto px-4 py-4 flex justify-between items-center max-w-6xl gap-4">
                     <!-- Logotipo -->
-                    <Link :href="route('storefront.index')" class="text-2xl font-black tracking-tight text-blue-600 flex items-center gap-1.5 hover:opacity-95 transition-opacity">
+                    <Link :href="route('storefront.index')" class="text-2xl font-black tracking-tight text-blue-600 flex items-center gap-1.5 hover:opacity-95 transition-opacity flex-shrink-0">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" /></svg>
                         <span>{{ settings.company_name || 'GiftJoy' }}</span>
                     </Link>
 
+                    <!-- Barra de busca no cabeçalho (Desktop) -->
+                    <div class="hidden md:block flex-1 max-w-md mx-6">
+                        <form @submit.prevent="executeSearch" class="relative">
+                            <input 
+                                type="text" 
+                                v-model="headerSearchQuery"
+                                placeholder="Digite o que você procura..." 
+                                class="w-full bg-slate-50 border border-slate-200 rounded-full pl-5 pr-11 py-2 text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
+                            />
+                            <button type="submit" class="absolute right-3.5 top-2.5 text-slate-400 hover:text-blue-600 transition-colors">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                            </button>
+                        </form>
+                    </div>
+
                     <!-- Menu de Navegação Dinâmico (Desktop) -->
-                    <nav class="hidden md:flex items-center space-x-7">
+                    <nav class="hidden md:flex items-center space-x-6">
                         <div v-for="menu in menuItems" :key="menu.id" class="relative group">
                             <!-- Item sem Submenu -->
                             <Link v-if="!menu.children || menu.children.length === 0" :href="getMenuUrl(menu)" class="text-slate-600 hover:text-blue-600 font-semibold text-sm transition-colors py-2 block">
@@ -213,7 +289,7 @@ const openDropdown = ref(null);
                     </nav>
 
                     <!-- Ações do Header (Carrinho e Mobile Toggle) -->
-                    <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-3 flex-shrink-0">
                         <Link :href="route('storefront.cart')" class="relative p-2 bg-slate-50 hover:bg-blue-50 rounded-full transition-colors group">
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-700 group-hover:text-blue-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
@@ -230,7 +306,20 @@ const openDropdown = ref(null);
                 </div>
 
                 <!-- Menu Mobile (Drawer) -->
-                <div v-if="showingMobileMenu" class="md:hidden border-t border-slate-100 bg-white px-4 py-3 space-y-2 shadow-inner">
+                <div v-if="showingMobileMenu" class="md:hidden border-t border-slate-100 bg-white px-4 py-3 space-y-3 shadow-inner">
+                    <!-- Barra de busca no mobile -->
+                    <form @submit.prevent="executeSearch" class="relative">
+                        <input 
+                            type="text" 
+                            v-model="headerSearchQuery"
+                            placeholder="Digite o que você procura..." 
+                            class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-4 pr-10 py-2 text-xs focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
+                        />
+                        <button type="submit" class="absolute right-3 top-2.5 text-slate-400 hover:text-blue-600 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                        </button>
+                    </form>
+
                     <div v-for="menu in menuItems" :key="menu.id" class="border-b last:border-b-0 pb-2">
                         <Link v-if="!menu.children || menu.children.length === 0" :href="getMenuUrl(menu)" @click="showingMobileMenu = false" class="block py-2 text-slate-700 hover:text-blue-600 font-semibold text-sm">
                             {{ menu.label }}
@@ -462,7 +551,7 @@ const openDropdown = ref(null);
 
                                     <!-- Imagem do Card -->
                                     <Link :href="route('storefront.product.show', { product: product.slug })" class="block aspect-square w-full bg-slate-50 border-b border-slate-50 relative overflow-hidden flex items-center justify-center p-4">
-                                        <img :src="product.images && product.images.length > 0 ? `/storage/${product.images.find(img => img.is_main)?.path || product.images[0].path}` : 'https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?auto=format&fit=crop&w=600&q=80'" alt="Foto do Produto" class="max-w-full max-h-full object-contain transform group-hover:scale-103 transition-transform duration-500">
+                                        <img :src="product.images && product.images.length > 0 ? `/storage/${product.images.find(img => img.is_main)?.path || product.images[0].path}` : 'https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?auto=format&fit=crop&w=600&q=80'" :alt="product.name" class="max-w-full max-h-full object-contain transform group-hover:scale-103 transition-transform duration-500">
                                     </Link>
 
                                     <!-- Corpo do Card -->
@@ -483,22 +572,38 @@ const openDropdown = ref(null);
                                             </Link>
                                         </div>
 
-                                        <!-- Preço e Botão Adicionar -->
-                                        <div class="flex items-center justify-between pt-2 border-t border-slate-50">
-                                            <div class="flex flex-col">
-                                                <span class="text-xxs text-slate-400 font-bold">A partir de</span>
-                                                <div class="flex items-baseline gap-1">
-                                                    <span v-if="product.promotional_price" class="font-black text-slate-900 text-sm">R$ {{ parseFloat(product.promotional_price).toFixed(2) }}</span>
-                                                    <span v-else class="font-black text-slate-900 text-sm">R$ {{ parseFloat(product.price).toFixed(2) }}</span>
-                                                    <span v-if="product.promotional_price" class="text-xxs text-slate-400 line-through">R$ {{ parseFloat(product.price).toFixed(2) }}</span>
+                                        <!-- Preço e Botões -->
+                                        <div class="pt-3 border-t border-slate-100 flex flex-col gap-2">
+                                            <div class="flex items-center justify-between">
+                                                <div class="flex flex-col">
+                                                    <span class="text-xxs text-slate-400 font-bold">A partir de</span>
+                                                    <div class="flex items-baseline gap-1">
+                                                        <span v-if="product.promotional_price" class="font-black text-slate-900 text-sm">R$ {{ parseFloat(product.promotional_price).toFixed(2) }}</span>
+                                                        <span v-else class="font-black text-slate-900 text-sm">R$ {{ parseFloat(product.price).toFixed(2) }}</span>
+                                                        <span v-if="product.promotional_price" class="text-xxs text-slate-400 line-through">R$ {{ parseFloat(product.price).toFixed(2) }}</span>
+                                                    </div>
                                                 </div>
                                             </div>
+
                                             <button 
                                                 @click="addToCart(product, $event)" 
-                                                class="bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white p-2.5 rounded-xl transition-all shadow-sm"
+                                                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-xl transition-all duration-200 text-xs flex items-center justify-center gap-1.5 shadow-sm"
                                             >
-                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 6v6m0 0v6m0-6h6m-6 0H6" /></svg>
+                                                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                                <span>Adicionar ao orçamento</span>
                                             </button>
+
+                                            <a 
+                                                v-if="settings.company_whatsapp"
+                                                :href="getProductWhatsappUrl(product.name)"
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                @click.stop
+                                                class="w-full border border-[#25D366] text-[#25D366] hover:bg-[#25D366] hover:text-white font-bold py-1.5 px-4 rounded-xl transition-all duration-200 text-xs flex items-center justify-center gap-1.5"
+                                            >
+                                                <span>Dúvidas pelo whatsapp</span>
+                                                <i class="fa-brands fa-whatsapp text-sm"></i>
+                                            </a>
                                         </div>
                                     </div>
                                 </div>
@@ -604,6 +709,9 @@ const openDropdown = ref(null);
                 </div>
             </div>
         </footer>
+
+        <!-- Botão WhatsApp Flutuante -->
+        <FloatingWhatsapp :settings="settings" />
     </div>
 </template>
 

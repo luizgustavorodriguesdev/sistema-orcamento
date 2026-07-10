@@ -15,6 +15,7 @@ use App\Models\Client;
 use App\Models\PaymentMethod;
 use App\Models\MenuItem;
 use App\Models\Page;
+use App\Models\Banner;
 
 class StorefrontController extends Controller
 {
@@ -70,10 +71,13 @@ class StorefrontController extends Controller
             $featuredCategories = $featuredCategories->merge($additional);
         }
 
+        $banners = Banner::where('is_active', true)->orderBy('order')->get();
+
         return Inertia::render('Storefront/Index', array_merge($storefrontData, [
             'products' => $products,
             'featuredCategories' => $featuredCategories,
             'selectedCategoryId' => $request->category,
+            'banners' => $banners,
         ]));
     }
 
@@ -230,6 +234,159 @@ class StorefrontController extends Controller
             'category' => $category,
             'products' => $products,
             'currentSort' => $sort,
+            'filterOptions' => $filterOptions,
+            'selectedFilters' => $selectedFilters,
+        ]));
+    }
+
+    /**
+     * Exibe a página de busca pública de produtos.
+     */
+    public function search(Request $request): Response
+    {
+        $q = $request->query('q', '');
+
+        // 1. Iniciar query de produtos
+        $query = Product::query()->with(['images', 'category', 'priceTiers']);
+
+        if (!empty($q)) {
+            $query->where(function($sub) use ($q) {
+                $sub->where('name', 'like', "%{$q}%")
+                    ->orWhere('description', 'like', "%{$q}%")
+                    ->orWhere('meta_keywords', 'like', "%{$q}%")
+                    ->orWhereHas('category', function($catQuery) use ($q) {
+                        $catQuery->where('name', 'like', "%{$q}%");
+                    });
+            });
+        }
+
+        // Para carregar os filtros disponíveis para ESTA busca
+        $productIds = (clone $query)->pluck('id');
+
+        $availableThemes = \App\Models\Theme::whereHas('products', function($queryTheme) use ($productIds) {
+            $queryTheme->whereIn('products.id', $productIds);
+        })->orderBy('name')->get(['id', 'name', 'slug']);
+
+        $availablePersonalizations = \App\Models\PersonalizationType::whereHas('products', function($queryPers) use ($productIds) {
+            $queryPers->whereIn('products.id', $productIds);
+        })->orderBy('name')->get(['id', 'name', 'slug']);
+
+        $availableColors = \App\Models\Color::whereHas('products', function($queryColor) use ($productIds) {
+            $queryColor->whereIn('products.id', $productIds);
+        })->orderBy('name')->get(['id', 'name', 'slug', 'hex_code']);
+
+        $availableCharacteristics = \App\Models\Characteristic::whereHas('products', function($queryChar) use ($productIds) {
+            $queryChar->whereIn('products.id', $productIds);
+        })->orderBy('name')->get(['id', 'name', 'slug']);
+
+        // Faixa de preço nos produtos da busca
+        $minPrice = (float) Product::whereIn('id', $productIds)->min(DB::raw('COALESCE(promotional_price, price)')) ?: 0;
+        $maxPrice = (float) Product::whereIn('id', $productIds)->max(DB::raw('COALESCE(promotional_price, price)')) ?: 0;
+
+        $filterOptions = [
+            'themes' => $availableThemes,
+            'personalization_types' => $availablePersonalizations,
+            'colors' => $availableColors,
+            'characteristics' => $availableCharacteristics,
+            'price_range' => [
+                'min' => $minPrice,
+                'max' => $maxPrice,
+            ]
+        ];
+
+        // 2. Aplicar os filtros selecionados se houver
+        if ($request->filled('themes')) {
+            $selectedThemes = explode(',', $request->themes);
+            $selectedThemes = array_filter(array_map('trim', $selectedThemes));
+            if (!empty($selectedThemes)) {
+                $query->whereHas('themes', function($sub) use ($selectedThemes) {
+                    $sub->whereIn('slug', $selectedThemes);
+                });
+            }
+        }
+
+        if ($request->filled('personalization_types')) {
+            $selectedPers = explode(',', $request->personalization_types);
+            $selectedPers = array_filter(array_map('trim', $selectedPers));
+            if (!empty($selectedPers)) {
+                $query->whereHas('personalizationTypes', function($sub) use ($selectedPers) {
+                    $sub->whereIn('slug', $selectedPers);
+                });
+            }
+        }
+
+        if ($request->filled('colors')) {
+            $selectedColors = explode(',', $request->colors);
+            $selectedColors = array_filter(array_map('trim', $selectedColors));
+            if (!empty($selectedColors)) {
+                $query->whereHas('colors', function($sub) use ($selectedColors) {
+                    $sub->whereIn('slug', $selectedColors);
+                });
+            }
+        }
+
+        if ($request->filled('characteristics')) {
+            $selectedChars = explode(',', $request->characteristics);
+            $selectedChars = array_filter(array_map('trim', $selectedChars));
+            if (!empty($selectedChars)) {
+                $query->whereHas('characteristics', function($sub) use ($selectedChars) {
+                    $sub->whereIn('slug', $selectedChars);
+                });
+            }
+        }
+
+        if ($request->filled('min_price')) {
+            $minVal = (float) $request->min_price;
+            $query->where(function($sub) use ($minVal) {
+                $sub->where(function($s) use ($minVal) {
+                    $s->whereNotNull('promotional_price')->where('promotional_price', '>=', $minVal);
+                })->orWhere(function($s) use ($minVal) {
+                    $s->whereNull('promotional_price')->where('price', '>=', $minVal);
+                });
+            });
+        }
+
+        if ($request->filled('max_price')) {
+            $maxVal = (float) $request->max_price;
+            $query->where(function($sub) use ($maxVal) {
+                $sub->where(function($s) use ($maxVal) {
+                    $s->whereNotNull('promotional_price')->where('promotional_price', '<=', $maxVal);
+                })->orWhere(function($s) use ($maxVal) {
+                    $s->whereNull('promotional_price')->where('price', '<=', $maxVal);
+                });
+            });
+        }
+
+        // Ordenação
+        $sort = $request->query('sort', 'latest');
+        $perPage = (int) $request->query('per_page', 12);
+        
+        if ($sort === 'price_asc') {
+            $query->orderBy(DB::raw('COALESCE(promotional_price, price)'), 'asc');
+        } elseif ($sort === 'price_desc') {
+            $query->orderBy(DB::raw('COALESCE(promotional_price, price)'), 'desc');
+        } elseif ($sort === 'name_asc') {
+            $query->orderBy('name', 'asc');
+        } else {
+            $query->latest();
+        }
+
+        $products = $query->paginate($perPage)->withQueryString();
+        $storefrontData = $this->getStorefrontData();
+
+        $selectedFilters = [
+            'themes' => $request->filled('themes') ? explode(',', $request->themes) : [],
+            'personalization_types' => $request->filled('personalization_types') ? explode(',', $request->personalization_types) : [],
+            'colors' => $request->filled('colors') ? explode(',', $request->colors) : [],
+            'characteristics' => $request->filled('characteristics') ? explode(',', $request->characteristics) : [],
+            'min_price' => $request->min_price,
+            'max_price' => $request->max_price,
+        ];
+
+        return Inertia::render('Storefront/Search', array_merge($storefrontData, [
+            'searchTerm' => $q,
+            'products' => $products,
+            'currentSort' => $sort,
             'currentPerPage' => $perPage,
             'filterOptions' => $filterOptions,
             'selectedFilters' => $selectedFilters,
@@ -365,5 +522,95 @@ class StorefrontController extends Controller
         }
 
         return (float) ($product->promotional_price ?? $product->price);
+    }
+
+    /**
+     * Gera o sitemap.xml dinamicamente.
+     */
+    public function sitemap()
+    {
+        $urls = [];
+        $appUrl = url('/');
+
+        // 1. Home
+        $urls[] = [
+            'loc' => $appUrl,
+            'lastmod' => now()->tz('UTC')->toAtomString(),
+            'changefreq' => 'daily',
+            'priority' => '1.0'
+        ];
+
+        // 2. Categorias
+        $categories = Category::all();
+        foreach ($categories as $category) {
+            $urls[] = [
+                'loc' => route('storefront.category.show', ['category' => $category->slug]),
+                'lastmod' => $category->updated_at ? $category->updated_at->tz('UTC')->toAtomString() : now()->tz('UTC')->toAtomString(),
+                'changefreq' => 'weekly',
+                'priority' => '0.8'
+            ];
+        }
+
+        // 3. Produtos
+        $products = Product::all();
+        foreach ($products as $product) {
+            $urls[] = [
+                'loc' => route('storefront.product.show', ['product' => $product->slug]),
+                'lastmod' => $product->updated_at ? $product->updated_at->tz('UTC')->toAtomString() : now()->tz('UTC')->toAtomString(),
+                'changefreq' => 'weekly',
+                'priority' => '0.8'
+            ];
+        }
+
+        // 4. Páginas institucionais
+        $pages = Page::where('is_active', true)->get();
+        foreach ($pages as $page) {
+            $urls[] = [
+                'loc' => route('storefront.page.show', ['page' => $page->slug]),
+                'lastmod' => $page->updated_at ? $page->updated_at->tz('UTC')->toAtomString() : now()->tz('UTC')->toAtomString(),
+                'changefreq' => 'monthly',
+                'priority' => '0.5'
+            ];
+        }
+
+        // Monta o XML
+        $xml = '<?xml version="1.0" encoding="UTF-8"?>';
+        $xml .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">';
+        
+        foreach ($urls as $url) {
+            $xml .= '<url>';
+            $xml .= '<loc>' . htmlspecialchars($url['loc']) . '</loc>';
+            $xml .= '<lastmod>' . $url['lastmod'] . '</lastmod>';
+            $xml .= '<changefreq>' . $url['changefreq'] . '</changefreq>';
+            $xml .= '<priority>' . $url['priority'] . '</priority>';
+            $xml .= '</url>';
+        }
+        
+        $xml .= '</urlset>';
+
+        return response($xml, 200, [
+            'Content-Type' => 'application/xml'
+        ]);
+    }
+
+    /**
+     * Gera o robots.txt dinamicamente.
+     */
+    public function robots()
+    {
+        $appUrl = Setting::where('key', 'app_domain')->value('value') ?: url('/');
+        $appUrl = rtrim($appUrl, '/');
+
+        $content = "User-agent: *\n";
+        $content .= "Disallow: /dashboard\n";
+        $content .= "Disallow: /login\n";
+        $content .= "Disallow: /register\n";
+        $content .= "Disallow: /profile\n";
+        $content .= "Disallow: /orcamento/\n\n";
+        $content .= "Sitemap: {$appUrl}/sitemap.xml\n";
+
+        return response($content, 200, [
+            'Content-Type' => 'text/plain'
+        ]);
     }
 }

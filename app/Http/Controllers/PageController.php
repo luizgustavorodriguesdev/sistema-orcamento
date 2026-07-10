@@ -40,6 +40,9 @@ class PageController extends Controller
             'content' => 'nullable|string',
             'custom_css' => 'nullable|string',
             'is_active' => 'nullable|boolean',
+            'meta_title' => 'nullable|string|max:255',
+            'meta_description' => 'nullable|string|max:1000',
+            'meta_keywords' => 'nullable|string|max:255',
         ]);
 
         Page::create([
@@ -48,6 +51,9 @@ class PageController extends Controller
             'content' => $request->content,
             'custom_css' => $request->custom_css,
             'is_active' => $request->boolean('is_active', true),
+            'meta_title' => $request->meta_title,
+            'meta_description' => $request->meta_description,
+            'meta_keywords' => $request->meta_keywords,
         ]);
 
         return redirect()->route('pages.index')->with('success', 'Página criada com sucesso.');
@@ -74,6 +80,9 @@ class PageController extends Controller
             'content' => 'nullable|string',
             'custom_css' => 'nullable|string',
             'is_active' => 'nullable|boolean',
+            'meta_title' => 'nullable|string|max:255',
+            'meta_description' => 'nullable|string|max:1000',
+            'meta_keywords' => 'nullable|string|max:255',
         ]);
 
         $page->update([
@@ -82,6 +91,9 @@ class PageController extends Controller
             'content' => $request->content,
             'custom_css' => $request->custom_css,
             'is_active' => $request->boolean('is_active'),
+            'meta_title' => $request->meta_title,
+            'meta_description' => $request->meta_description,
+            'meta_keywords' => $request->meta_keywords,
         ]);
 
         return redirect()->route('pages.index')->with('success', 'Página atualizada com sucesso.');

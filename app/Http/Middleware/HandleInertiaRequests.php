@@ -35,6 +35,7 @@ class HandleInertiaRequests extends Middleware
                 'user' => $request->user(),
             ],
             'appVersion' => config('app.version', '1.0.0'),
+            'current_url' => $request->url(),
         ];
     }
 }

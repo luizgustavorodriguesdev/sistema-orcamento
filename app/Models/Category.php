@@ -19,6 +19,9 @@ class Category extends Model
         'is_featured',
         'image_path',
         'slug',
+        'meta_title',
+        'meta_description',
+        'meta_keywords',
     ];
 
     /**

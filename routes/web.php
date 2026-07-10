@@ -16,6 +16,7 @@ use App\Http\Controllers\ThemeController;
 use App\Http\Controllers\PersonalizationTypeController;
 use App\Http\Controllers\ColorController;
 use App\Http\Controllers\CharacteristicController;
+use App\Http\Controllers\BannerController;
 use App\Models\Quote;
 use App\Models\Product;
 use App\Models\Client;
@@ -29,6 +30,7 @@ use Inertia\Inertia;
 |--------------------------------------------------------------------------
 */
 Route::get('/', [StorefrontController::class, 'index'])->name('storefront.index');
+Route::get('/busca', [StorefrontController::class, 'search'])->name('storefront.search');
 Route::get('/carrinho', [StorefrontController::class, 'cart'])->name('storefront.cart');
 Route::post('/carrinho', [StorefrontController::class, 'storeQuote'])->name('storefront.quote.store');
 Route::get('/category/{category:slug}', [StorefrontController::class, 'categoryShow'])->name('storefront.category.show');
@@ -87,6 +89,7 @@ Route::middleware('auth')->group(function () {
     Route::resource('categories', CategoryController::class);
     Route::resource('menu-items', MenuItemController::class);
     Route::resource('pages', PageController::class);
+    Route::resource('banners', BannerController::class);
     Route::resource('media', MediaController::class);
     Route::get('/api/media', [MediaController::class, 'apiIndex'])->name('api.media.index');
     
@@ -105,6 +108,12 @@ Route::middleware('auth')->group(function () {
 });
 
 require __DIR__.'/auth.php';
+
+// Rota dinâmica para o sitemap.xml
+Route::get('/sitemap.xml', [StorefrontController::class, 'sitemap'])->name('sitemap');
+
+// Rota dinâmica para o robots.txt
+Route::get('/robots.txt', [StorefrontController::class, 'robots'])->name('robots');
 
 // Rota de fallback para páginas institucionais dinâmicas na raiz (ex: /quem-somos, /contato)
 Route::get('/{page:slug}', [StorefrontController::class, 'customPageShow'])->name('storefront.page.show');

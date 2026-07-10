@@ -19,6 +19,9 @@ class Product extends Model
         'price',
         'promotional_price',
         'category_id',
+        'meta_title',
+        'meta_description',
+        'meta_keywords',
     ];
     
     /**

@@ -1,6 +1,7 @@
 <script setup>
-import { ref, computed } from 'vue';
-import { Head, Link } from '@inertiajs/vue3';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
+import { Head, Link, router } from '@inertiajs/vue3';
+import FloatingWhatsapp from '@/Components/FloatingWhatsapp.vue';
 
 const props = defineProps({
     products: Object,
@@ -9,7 +10,52 @@ const props = defineProps({
     menuItems: Array,
     featuredCategories: Array,
     selectedCategoryId: [String, Number],
+    banners: Array,
 });
+
+// --- LÓGICA DO CARROSSEL DE BANNERS ---
+const activeSlide = ref(0);
+let carouselInterval = null;
+
+const nextSlide = () => {
+    if (props.banners && props.banners.length > 0) {
+        activeSlide.value = (activeSlide.value + 1) % props.banners.length;
+    }
+};
+
+const prevSlide = () => {
+    if (props.banners && props.banners.length > 0) {
+        activeSlide.value = (activeSlide.value - 1 + props.banners.length) % props.banners.length;
+    }
+};
+
+const setSlide = (idx) => {
+    activeSlide.value = idx;
+    resetAutoplay();
+};
+
+const resetAutoplay = () => {
+    if (carouselInterval) clearInterval(carouselInterval);
+    carouselInterval = setInterval(nextSlide, 5000);
+};
+
+onMounted(() => {
+    if (props.banners && props.banners.length > 1) {
+        resetAutoplay();
+    }
+});
+
+onUnmounted(() => {
+    if (carouselInterval) clearInterval(carouselInterval);
+});
+
+// --- LINK DO WHATSAPP DE ACORDO COM O PRODUTO ---
+const getProductWhatsappUrl = (productName) => {
+    if (!props.settings.company_whatsapp) return '#';
+    const cleanNumber = props.settings.company_whatsapp.replace(/\D/g, '');
+    const message = encodeURIComponent(`Olá! Gostaria de mais informações sobre o produto: ${productName}`);
+    return `https://wa.me/${cleanNumber}?text=${message}`;
+};
 
 // --- LÓGICA DO CARRINHO ---
 const cart = ref(JSON.parse(localStorage.getItem('cart') || '[]'));
@@ -96,13 +142,49 @@ const activeCategoryName = computed(() => {
     return cat ? cat.name : '';
 });
 
+// --- BUSCA NO CABEÇALHO ---
+const headerSearchQuery = ref('');
+const executeSearch = () => {
+    if (headerSearchQuery.value.trim()) {
+        router.get(route('storefront.search'), { q: headerSearchQuery.value });
+    }
+};
+
+// --- LINK DO WHATSAPP ---
+const whatsappUrl = computed(() => {
+    if (!props.settings.company_whatsapp) return null;
+    const cleanNumber = props.settings.company_whatsapp.replace(/\D/g, '');
+    return `https://wa.me/${cleanNumber}`;
+});
+
 // --- MENU MOBILE ---
 const showingMobileMenu = ref(false);
 const openDropdown = ref(null);
 </script>
 
 <template>
-    <Head title="Vitrine de Produtos - Brindes Personalizados" />
+    <Head>
+        <title>{{ settings.seo_meta_title || "Vitrine de Produtos - Brindes Personalizados" }}</title>
+        <meta name="description" :content="settings.seo_meta_description || 'Confira nossos produtos personalizados.'" />
+        <meta name="keywords" :content="settings.seo_meta_keywords || 'brindes, personalizados, copos, canecas'" />
+
+        <!-- URL Canônica -->
+        <link rel="canonical" :href="$page.props.current_url" />
+
+        <!-- Open Graph / Facebook -->
+        <meta property="og:type" content="website" />
+        <meta property="og:url" :content="$page.props.current_url" />
+        <meta property="og:title" :content="settings.seo_meta_title || 'Vitrine de Produtos - Brindes Personalizados'" />
+        <meta property="og:description" :content="settings.seo_meta_description || 'Confira nossos produtos personalizados.'" />
+        <meta property="og:image" content="/images/hero_showcase.png" />
+
+        <!-- Twitter -->
+        <meta property="twitter:card" content="summary_large_image" />
+        <meta property="twitter:url" :content="$page.props.current_url" />
+        <meta property="twitter:title" :content="settings.seo_meta_title || 'Vitrine de Produtos - Brindes Personalizados'" />
+        <meta property="twitter:description" :content="settings.seo_meta_description || 'Confira nossos produtos personalizados.'" />
+        <meta property="twitter:image" content="/images/hero_showcase.png" />
+    </Head>
 
     <!-- Notificação (Toast) -->
     <div v-if="toast.show" class="fixed top-5 right-5 bg-blue-600 text-white py-3 px-5 rounded-xl shadow-2xl z-50 transform translate-y-0 transition-transform duration-300 flex items-center gap-2 border border-blue-500">
@@ -114,18 +196,35 @@ const openDropdown = ref(null);
         
         <!-- BARRA SUPERIOR DE INFORMAÇÕES -->
         <div class="bg-slate-900 text-slate-300 text-xs py-2 border-b border-slate-800">
-            <div class="container mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-2">
-                <div class="flex items-center gap-1.5">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
-                    <span>Entregamos para todo o Brasil</span>
+            <div class="container mx-auto px-4 flex flex-col sm:flex-row justify-between items-center gap-2 max-w-6xl">
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-1.5">
+                        <i class="fa-solid fa-location-dot text-blue-400"></i>
+                        <span>Entregamos para todo o Brasil</span>
+                    </div>
+                    <!-- Ícones das Redes Sociais na Top Bar -->
+                    <div class="hidden sm:flex items-center gap-3 border-l border-slate-800 pl-4">
+                        <a v-if="settings.social_facebook" :href="settings.social_facebook" target="_blank" class="hover:text-blue-500 transition-colors text-sm" title="Facebook">
+                            <i class="fa-brands fa-facebook"></i>
+                        </a>
+                        <a v-if="settings.social_instagram" :href="settings.social_instagram" target="_blank" class="hover:text-rose-500 transition-colors text-sm" title="Instagram">
+                            <i class="fa-brands fa-instagram"></i>
+                        </a>
+                        <a v-if="settings.social_youtube" :href="settings.social_youtube" target="_blank" class="hover:text-red-600 transition-colors text-sm" title="YouTube">
+                            <i class="fa-brands fa-youtube"></i>
+                        </a>
+                        <a v-if="whatsappUrl" :href="whatsappUrl" target="_blank" class="hover:text-green-500 transition-colors text-sm" title="WhatsApp">
+                            <i class="fa-brands fa-whatsapp"></i>
+                        </a>
+                    </div>
                 </div>
                 <div class="flex flex-wrap items-center gap-4">
-                    <a v-if="settings.company_email" :href="`mailto:${settings.company_email}`" class="hover:text-blue-400 flex items-center gap-1 transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+                    <a v-if="settings.company_email" :href="`mailto:${settings.company_email}`" class="hover:text-blue-400 flex items-center gap-1.5 transition-colors">
+                        <i class="fa-solid fa-envelope text-blue-400"></i>
                         <span>{{ settings.company_email }}</span>
                     </a>
-                    <a v-if="settings.company_phone" :href="`tel:${settings.company_phone}`" class="hover:text-blue-400 flex items-center gap-1 transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.94.725l.548 2.2a1 1 0 01-.321.988l-1.305.98a10.582 10.582 0 004.872 4.872l.98-1.305a1 1 0 01.988-.321l2.2.548a1 1 0 01.725.94V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" /></svg>
+                    <a v-if="settings.company_phone" :href="`tel:${settings.company_phone}`" class="hover:text-blue-400 flex items-center gap-1.5 transition-colors">
+                        <i class="fa-solid fa-phone text-blue-400"></i>
                         <span>{{ settings.company_phone }}</span>
                     </a>
                 </div>
@@ -134,15 +233,30 @@ const openDropdown = ref(null);
 
         <!-- CABEÇALHO PRINCIPAL -->
         <header class="bg-white shadow-sm sticky top-0 z-40">
-            <div class="container mx-auto px-4 py-4 flex justify-between items-center">
+            <div class="container mx-auto px-4 py-4 flex justify-between items-center max-w-6xl gap-4">
                 <!-- Logotipo -->
-                <Link :href="route('storefront.index')" class="text-2xl font-black tracking-tight text-blue-600 flex items-center gap-1.5 hover:opacity-95 transition-opacity">
+                <Link :href="route('storefront.index')" class="text-2xl font-black tracking-tight text-blue-600 flex items-center gap-1.5 hover:opacity-95 transition-opacity flex-shrink-0">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-7 w-7 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" /></svg>
                     <span>{{ settings.company_name || 'GiftJoy' }}</span>
                 </Link>
 
+                <!-- Barra de busca no cabeçalho (Desktop) -->
+                <div class="hidden md:block flex-1 max-w-md mx-6">
+                    <form @submit.prevent="executeSearch" class="relative">
+                        <input 
+                            type="text" 
+                            v-model="headerSearchQuery"
+                            placeholder="Digite o que você procura..." 
+                            class="w-full bg-slate-50 border border-slate-200 rounded-full pl-5 pr-11 py-2 text-sm focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
+                        />
+                        <button type="submit" class="absolute right-3.5 top-2.5 text-slate-400 hover:text-blue-600 transition-colors">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4.5 w-4.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                        </button>
+                    </form>
+                </div>
+
                 <!-- Menu de Navegação Dinâmico (Desktop) -->
-                <nav class="hidden md:flex items-center space-x-7">
+                <nav class="hidden md:flex items-center space-x-6">
                     <div v-for="menu in menuItems" :key="menu.id" class="relative group">
                         <!-- Item sem Submenu -->
                         <Link v-if="!menu.children || menu.children.length === 0" :href="getMenuUrl(menu)" class="text-slate-600 hover:text-blue-600 font-semibold text-sm transition-colors py-2 block">
@@ -165,7 +279,7 @@ const openDropdown = ref(null);
                 </nav>
 
                 <!-- Ações do Header (Carrinho e Mobile Toggle) -->
-                <div class="flex items-center gap-4">
+                <div class="flex items-center gap-3 flex-shrink-0">
                     <Link :href="route('storefront.cart')" class="relative p-2 bg-slate-50 hover:bg-blue-50 rounded-full transition-colors group">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-slate-700 group-hover:text-blue-600 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
@@ -182,7 +296,20 @@ const openDropdown = ref(null);
             </div>
 
             <!-- Menu Mobile (Drawer) -->
-            <div v-if="showingMobileMenu" class="md:hidden border-t border-slate-100 bg-white px-4 py-3 space-y-2 shadow-inner">
+            <div v-if="showingMobileMenu" class="md:hidden border-t border-slate-100 bg-white px-4 py-3 space-y-3 shadow-inner">
+                <!-- Barra de busca no mobile -->
+                <form @submit.prevent="executeSearch" class="relative">
+                    <input 
+                        type="text" 
+                        v-model="headerSearchQuery"
+                        placeholder="Digite o que você procura..." 
+                        class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-4 pr-10 py-2 text-xs focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all outline-none"
+                    />
+                    <button type="submit" class="absolute right-3 top-2.5 text-slate-400 hover:text-blue-600 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+                    </button>
+                </form>
+
                 <div v-for="menu in menuItems" :key="menu.id" class="border-b last:border-b-0 pb-2">
                     <Link v-if="!menu.children || menu.children.length === 0" :href="getMenuUrl(menu)" @click="showingMobileMenu = false" class="block py-2 text-slate-700 hover:text-blue-600 font-semibold text-sm">
                         {{ menu.label }}
@@ -202,39 +329,182 @@ const openDropdown = ref(null);
             </div>
         </header>
 
-        <!-- SEÇÃO HERO (BANNER SPLIT PREMIUM) -->
-        <section class="bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700 text-white overflow-hidden py-16 lg:py-24">
-            <div class="container mx-auto px-4 grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                <!-- Textos -->
-                <div class="space-y-6 lg:max-w-xl animate-fade-in-up">
-                    <span class="inline-block bg-blue-500 bg-opacity-30 text-blue-200 border border-blue-400 border-opacity-40 rounded-full px-4 py-1 text-xs font-bold tracking-wider uppercase">Canecas & Copos que Celebram Você</span>
-                    <h1 class="text-4xl sm:text-5xl font-black leading-tight tracking-tight">
-                        Brindes Personalizados que Elevam sua Marca
-                    </h1>
-                    <p class="text-blue-100 text-base sm:text-lg leading-relaxed font-light">
-                        Criamos brindes corporativos premium com a identidade visual da sua marca. Acabamentos finos, durabilidade extrema e o melhor design para encantar seus clientes e equipe.
-                    </p>
-                    <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 pt-4">
-                        <a href="#produtos" class="bg-rose-600 hover:bg-rose-700 text-white font-bold px-8 py-3.5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2 hover:-translate-y-0.5">
-                            <span>Personalizar Agora</span>
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-                        </a>
-                        <a href="#categorias" class="bg-white bg-opacity-10 hover:bg-opacity-20 text-white border border-white border-opacity-35 font-bold px-8 py-3.5 rounded-xl transition-colors duration-200 flex items-center justify-center gap-2">
-                            <span>Explorar Catálogo</span>
-                        </a>
+        <!-- SEÇÃO HERO CARROSSEL DINÂMICO -->
+        <section class="relative bg-slate-900 text-white overflow-hidden shadow-inner select-none h-[260px] sm:h-[350px] md:h-[400px]">
+            <!-- Se temos banners cadastrados -->
+            <div v-if="banners && banners.length > 0" class="relative w-full h-full">
+                <div 
+                    v-for="(banner, idx) in banners" 
+                    :key="banner.id" 
+                    class="absolute inset-0 w-full h-full transition-opacity duration-700 ease-in-out flex items-center"
+                    :class="activeSlide === idx ? 'opacity-100 z-10' : 'opacity-0 z-0 pointer-events-none'"
+                >
+                    <!-- Imagem de Fundo -->
+                    <div 
+                        class="absolute inset-0 bg-cover bg-center transition-transform duration-[10000ms]"
+                        :class="activeSlide === idx ? 'scale-105' : 'scale-100'"
+                        :style="{ backgroundImage: `url('/storage/${banner.image_path}')` }"
+                    ></div>
+                    
+                    <!-- Overlay Gradiente Escuro -->
+                    <div class="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-900/50 to-transparent"></div>
+                    
+                    <!-- Conteúdo do Slide -->
+                    <div class="container mx-auto px-4 sm:px-6 md:px-8 max-w-6xl relative z-10 space-y-4">
+                        <div class="max-w-xl space-y-2 sm:space-y-4 animate-fade-in-up">
+                            <h2 v-if="banner.title" class="text-2xl sm:text-4xl md:text-5xl font-black leading-tight tracking-tight drop-shadow-md">
+                                {{ banner.title }}
+                            </h2>
+                            <p v-if="banner.subtitle" class="text-slate-200 text-xs sm:text-base md:text-lg font-light leading-relaxed drop-shadow">
+                                {{ banner.subtitle }}
+                            </p>
+                            <div v-if="banner.link" class="pt-2">
+                                <Link :href="banner.link" class="inline-flex items-center gap-2 bg-rose-600 hover:bg-rose-700 text-white text-xs sm:text-sm font-bold px-5 py-2.5 sm:px-7 sm:py-3.5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 transform hover:-translate-y-0.5">
+                                    <span>Saiba Mais</span>
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+                                </Link>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
-                <!-- Imagem do Hero -->
-                <div class="relative flex justify-center lg:justify-end animate-fade-in">
-                    <div class="absolute -top-10 -left-10 w-44 h-44 bg-blue-400 rounded-full mix-blend-multiply filter blur-2xl opacity-20 animate-blob"></div>
-                    <div class="absolute -bottom-10 -right-10 w-44 h-44 bg-indigo-400 rounded-full mix-blend-multiply filter blur-2xl opacity-20 animate-blob animation-delay-2000"></div>
-                    <div class="relative bg-white bg-opacity-5 p-4 rounded-3xl border border-white border-opacity-15 shadow-2xl">
-                        <img src="/images/hero_showcase.png" alt="Showcase de Mugs Personalizados" class="w-full max-w-lg object-cover rounded-2xl shadow-inner transform hover:scale-102 transition-transform duration-500">
+                <!-- Setas de Navegação -->
+                <button @click="prevSlide" class="absolute left-4 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white rounded-full p-2.5 z-20 transition-all hover:scale-105" aria-label="Slide anterior">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7" /></svg>
+                </button>
+                <button @click="nextSlide" class="absolute right-4 top-1/2 -translate-y-1/2 bg-black/30 hover:bg-black/50 text-white rounded-full p-2.5 z-20 transition-all hover:scale-105" aria-label="Próximo slide">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7" /></svg>
+                </button>
+
+                <!-- Indicadores de Slides (Dots) -->
+                <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex space-x-2 z-20">
+                    <button 
+                        v-for="(banner, idx) in banners" 
+                        :key="idx" 
+                        @click="setSlide(idx)"
+                        class="w-2.5 h-2.5 rounded-full transition-all duration-300"
+                        :class="activeSlide === idx ? 'bg-white scale-125 px-2' : 'bg-white/40 hover:bg-white/70'"
+                        :aria-label="`Ir para slide ${idx + 1}`"
+                    ></button>
+                </div>
+            </div>
+
+            <!-- Fallback Slide (Caso não haja banners cadastrados) -->
+            <div v-else class="relative w-full h-full flex items-center">
+                <div class="absolute inset-0 bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700"></div>
+                <div class="absolute inset-0 bg-gradient-to-r from-slate-950/80 via-slate-900/40 to-transparent"></div>
+                <div class="container mx-auto px-4 max-w-6xl relative z-10 grid grid-cols-1 lg:grid-cols-2 gap-8 items-center h-full py-8">
+                    <!-- Textos -->
+                    <div class="space-y-4 max-w-xl">
+                        <span class="inline-block bg-blue-500 bg-opacity-30 text-blue-200 border border-blue-400 border-opacity-40 rounded-full px-3 py-1 text-[10px] sm:text-xs font-bold uppercase tracking-wider">Canecas & Copos que Celebram Você</span>
+                        <h2 class="text-2xl sm:text-4xl md:text-5xl font-black leading-tight tracking-tight">
+                            Brindes Personalizados que Elevam sua Marca
+                        </h2>
+                        <p class="text-blue-100 text-xs sm:text-base font-light leading-relaxed">
+                            Criamos brindes corporativos premium com a identidade visual da sua marca. Acabamentos finos, durabilidade extrema e o melhor design.
+                        </p>
+                        <div class="flex items-center gap-3 pt-2">
+                            <a href="#produtos" class="bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs sm:text-sm px-6 py-2.5 rounded-xl shadow transition-transform hover:-translate-y-0.5">
+                                Personalizar Agora
+                            </a>
+                        </div>
+                    </div>
+                    <!-- Imagem Showcase -->
+                    <div class="hidden lg:flex justify-end relative h-full items-center">
+                        <img src="/images/hero_showcase.png" alt="Showcase de Mugs Personalizados" class="max-h-[300px] object-contain rounded-2xl shadow-2xl transform hover:scale-102 transition-transform duration-500">
                     </div>
                 </div>
             </div>
         </section>
+
+        <!-- SEÇÃO DE VANTAGENS (DO OIAPOQUE AO CHUÍ, ETC.) -->
+        <div class="bg-white border-b border-slate-100 py-6">
+            <div class="container mx-auto px-4 max-w-6xl">
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-y-6 gap-x-4 items-center justify-items-center">
+                    <!-- Vantagem 1 -->
+                    <div class="flex items-center gap-3 w-full max-w-[240px] md:justify-center">
+                        <div class="text-slate-800 text-2xl flex-shrink-0">
+                            <i :class="settings.advantage_1_icon || 'fa-solid fa-truck'"></i>
+                        </div>
+                        <div class="flex flex-col min-w-0">
+                            <span class="text-[#FF3366] text-xs sm:text-sm font-black whitespace-nowrap overflow-hidden text-ellipsis">{{ settings.advantage_1_title || 'Do Oiapoque ao Chuí' }}</span>
+                            <span class="text-slate-500 text-xxs sm:text-xs font-light whitespace-nowrap overflow-hidden text-ellipsis">{{ settings.advantage_1_subtitle || 'Entregas em Todo Brasil' }}</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Vantagem 2 -->
+                    <div class="flex items-center gap-3 w-full max-w-[240px] md:justify-center md:border-l border-slate-100">
+                        <div class="text-slate-800 text-2xl flex-shrink-0">
+                            <i :class="settings.advantage_2_icon || 'fa-solid fa-credit-card'"></i>
+                        </div>
+                        <div class="flex flex-col min-w-0 md:pl-4">
+                            <span class="text-[#FF3366] text-xs sm:text-sm font-black whitespace-nowrap overflow-hidden text-ellipsis">{{ settings.advantage_2_title || 'Parcelamento' }}</span>
+                            <span class="text-slate-500 text-xxs sm:text-xs font-light whitespace-nowrap overflow-hidden text-ellipsis">{{ settings.advantage_2_subtitle || 'Em até 3x sem juros' }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Vantagem 3 -->
+                    <div class="flex items-center gap-3 w-full max-w-[240px] md:justify-center md:border-l border-slate-100">
+                        <div class="text-slate-800 text-2xl flex-shrink-0">
+                            <i :class="settings.advantage_3_icon || 'fa-solid fa-gem'"></i>
+                        </div>
+                        <div class="flex flex-col min-w-0 md:pl-4">
+                            <span class="text-[#FF3366] text-xs sm:text-sm font-black whitespace-nowrap overflow-hidden text-ellipsis">{{ settings.advantage_3_title || 'Ganhe Desconto' }}</span>
+                            <span class="text-slate-500 text-xxs sm:text-xs font-light whitespace-nowrap overflow-hidden text-ellipsis">{{ settings.advantage_3_subtitle || 'Pagando com PIX' }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Vantagem 4 -->
+                    <div class="flex items-center gap-3 w-full max-w-[240px] md:justify-center md:border-l border-slate-100">
+                        <div class="text-slate-800 text-2xl flex-shrink-0">
+                            <i :class="settings.advantage_4_icon || 'fa-solid fa-shield-halved'"></i>
+                        </div>
+                        <div class="flex flex-col min-w-0 md:pl-4">
+                            <span class="text-[#FF3366] text-xs sm:text-sm font-black whitespace-nowrap overflow-hidden text-ellipsis">{{ settings.advantage_4_title || 'Segurança' }}</span>
+                            <span class="text-slate-500 text-xxs sm:text-xs font-light whitespace-nowrap overflow-hidden text-ellipsis">{{ settings.advantage_4_subtitle || 'Loja com SSL de proteção' }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SEÇÃO DE CHAMADAS PROMOCIONAIS (2 BANNERS SEGUIDOS) -->
+        <div v-if="settings.promo_banner_1_image_path || settings.promo_banner_2_image_path" class="container mx-auto px-4 max-w-6xl pt-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Banner 1 -->
+                <div v-if="settings.promo_banner_1_image_path">
+                    <Link 
+                        v-if="settings.promo_banner_1_link"
+                        :href="settings.promo_banner_1_link"
+                        class="block rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 transform hover:scale-[1.01]"
+                    >
+                        <img :src="`/storage/${settings.promo_banner_1_image_path}`" alt="Banner Promocional Esquerda" class="w-full h-auto object-cover max-h-56" />
+                    </Link>
+                    <div 
+                        v-else
+                        class="block rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 transform hover:scale-[1.01]"
+                    >
+                        <img :src="`/storage/${settings.promo_banner_1_image_path}`" alt="Banner Promocional Esquerda" class="w-full h-auto object-cover max-h-56" />
+                    </div>
+                </div>
+                <!-- Banner 2 -->
+                <div v-if="settings.promo_banner_2_image_path">
+                    <Link 
+                        v-if="settings.promo_banner_2_link"
+                        :href="settings.promo_banner_2_link"
+                        class="block rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 transform hover:scale-[1.01]"
+                    >
+                        <img :src="`/storage/${settings.promo_banner_2_image_path}`" alt="Banner Promocional Direita" class="w-full h-auto object-cover max-h-56" />
+                    </Link>
+                    <div 
+                        v-else
+                        class="block rounded-3xl overflow-hidden shadow-sm hover:shadow-md transition-all duration-300 transform hover:scale-[1.01]"
+                    >
+                        <img :src="`/storage/${settings.promo_banner_2_image_path}`" alt="Banner Promocional Direita" class="w-full h-auto object-cover max-h-56" />
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <!-- EXPLORAR CATEGORIAS (GRADE ASSIMÉTRICA) -->
         <section id="categorias" class="container mx-auto px-4 py-16">
@@ -263,7 +533,7 @@ const openDropdown = ref(null);
                 <!-- Cards das Categorias -->
                 <Link v-for="(cat, index) in categories" :key="cat.id" :href="route('storefront.category.show', { category: cat.slug })" class="flex flex-col items-center group text-center space-y-3">
                     <div class="w-full aspect-[4/5] bg-slate-100 rounded-2xl overflow-hidden shadow-sm group-hover:shadow-md transition-all duration-300 transform group-hover:-translate-y-1 relative">
-                        <img :src="getCategoryImage(cat, index)" alt="Imagem Categoria" class="absolute inset-0 w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500">
+                        <img :src="getCategoryImage(cat, index)" :alt="cat.name" class="absolute inset-0 w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-500">
                     </div>
                     <span class="text-xs font-black tracking-wider text-slate-800 uppercase group-hover:text-blue-600 transition-colors">{{ cat.name }}</span>
                 </Link>
@@ -308,7 +578,7 @@ const openDropdown = ref(null);
 
                         <!-- Foto do Produto com Hover Zoom -->
                         <div class="h-60 w-full overflow-hidden bg-slate-100 relative">
-                            <img :src="product.main_image && product.main_image.path ? `/storage/${product.main_image.path}` : 'https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?auto=format&fit=crop&w=600&q=80'" alt="Imagem do Produto" class="w-full h-full object-cover transform group-hover:scale-104 transition-transform duration-500">
+                            <img :src="product.main_image && product.main_image.path ? `/storage/${product.main_image.path}` : 'https://images.unsplash.com/photo-1514228742587-6b1558fcca3d?auto=format&fit=crop&w=600&q=80'" :alt="product.name" class="w-full h-full object-cover transform group-hover:scale-104 transition-transform duration-500">
                         </div>
 
                         <!-- Detalhes do Produto -->
@@ -342,10 +612,22 @@ const openDropdown = ref(null);
                                         R$ {{ parseFloat(product.price).toFixed(2) }}
                                     </span>
                                 </div>
-                                <button @click="addToCart(product, $event)" class="w-full bg-blue-50 hover:bg-blue-600 text-blue-600 hover:text-white font-bold py-2.5 px-4 rounded-xl transition-all duration-200 text-xs flex items-center justify-center gap-1">
-                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                <button @click="addToCart(product, $event)" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-xl transition-all duration-200 text-xs flex items-center justify-center gap-1.5 shadow-sm">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
                                     <span>Adicionar ao orçamento</span>
                                 </button>
+                                
+                                <a 
+                                    v-if="settings.company_whatsapp"
+                                    :href="getProductWhatsappUrl(product.name)"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    @click.stop
+                                    class="w-full border border-[#25D366] text-[#25D366] hover:bg-[#25D366] hover:text-white font-bold py-2 px-4 rounded-xl transition-all duration-200 text-xs flex items-center justify-center gap-1.5"
+                                >
+                                    <span>Dúvidas pelo whatsapp</span>
+                                    <i class="fa-brands fa-whatsapp text-sm"></i>
+                                </a>
                             </div>
                         </div>
                     </Link>
@@ -493,7 +775,7 @@ const openDropdown = ref(null);
                 </p>
                 <div class="flex flex-col sm:flex-row gap-4 justify-center pt-4">
                     <a v-if="settings.company_whatsapp" :href="`https://wa.me/${settings.company_whatsapp}?text=Olá! Gostaria de fazer um orçamento de brindes personalizados.`" target="_blank" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-8 py-3.5 rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 flex items-center justify-center gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 fill-current" viewBox="0 0 24 24"><path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946C.003 5.37 5.378 0 12.007 0c3.211.002 6.228 1.252 8.497 3.522 2.268 2.27 3.515 5.289 3.515 8.494 0 6.63-5.374 12-12.007 12-1.996 0-3.957-.497-5.717-1.442L0 24zm6.59-4.846c1.652.981 3.27 1.488 4.965 1.488 5.418 0 9.827-4.387 9.83-9.782.004-2.614-1.01-5.074-2.855-6.924C16.68 2.083 14.225 1.062 11.62 1.06 6.2 1.06 1.79 5.447 1.787 10.844c0 1.724.46 3.411 1.332 4.92l-.997 3.636 3.73-.974.202.12z"/></svg>
+                        <i class="fa-brands fa-whatsapp text-lg"></i>
                         <span>Falar com Consultor via WhatsApp</span>
                     </a>
                     <a href="#" class="bg-white bg-opacity-10 hover:bg-opacity-15 text-white border border-white border-opacity-20 font-bold px-8 py-3.5 rounded-xl transition-all flex items-center justify-center">
@@ -576,6 +858,8 @@ const openDropdown = ref(null);
             </div>
         </footer>
 
+        <!-- Botão WhatsApp Flutuante -->
+        <FloatingWhatsapp :settings="settings" />
     </div>
 </template>
 

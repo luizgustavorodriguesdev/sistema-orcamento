@@ -69,6 +69,9 @@ class ProductController extends Controller
             'colors.*' => 'exists:colors,id',
             'characteristics' => 'nullable|array',
             'characteristics.*' => 'exists:characteristics,id',
+            'meta_title' => 'nullable|string|max:255',
+            'meta_description' => 'nullable|string|max:1000',
+            'meta_keywords' => 'nullable|string|max:255',
         ]);
 
 
@@ -160,6 +163,9 @@ class ProductController extends Controller
             'colors.*' => 'exists:colors,id',
             'characteristics' => 'nullable|array',
             'characteristics.*' => 'exists:characteristics,id',
+            'meta_title' => 'nullable|string|max:255',
+            'meta_description' => 'nullable|string|max:1000',
+            'meta_keywords' => 'nullable|string|max:255',
         ]);
 
         DB::transaction(function () use ($request, $product, $validated) {

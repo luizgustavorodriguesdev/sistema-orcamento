@@ -15,6 +15,9 @@ const form = useForm({
     content: props.page.content || '',
     custom_css: props.page.custom_css || '',
     is_active: props.page.is_active === 1 || props.page.is_active === true,
+    meta_title: props.page.meta_title || '',
+    meta_description: props.page.meta_description || '',
+    meta_keywords: props.page.meta_keywords || '',
 });
 
 const submit = () => {
@@ -156,6 +159,30 @@ const onMediaSelect = (media) => {
                                     placeholder="Escreva seu CSS aqui..."
                                 ></textarea>
                                 <div v-if="form.errors.custom_css" class="text-sm text-red-600 mt-1">{{ form.errors.custom_css }}</div>
+                            </div>
+
+                            <!-- Secção de SEO -->
+                            <div class="mt-6 pt-6 border-t">
+                                <h3 class="text-lg font-medium text-gray-900">Configurações de SEO</h3>
+                                <p class="text-xs text-gray-500 mb-4">Insira os metadados para melhorar o ranqueamento desta página nos motores de busca.</p>
+                                
+                                <div class="space-y-4">
+                                    <div>
+                                        <label for="meta_title" class="block font-medium text-sm text-gray-700">Meta Title (Título da Página)</label>
+                                        <input id="meta_title" type="text" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" v-model="form.meta_title" placeholder="Deixe em branco para usar o título da página" />
+                                        <div v-if="form.errors.meta_title" class="text-sm text-red-600 mt-1">{{ form.errors.meta_title }}</div>
+                                    </div>
+                                    <div>
+                                        <label for="meta_description" class="block font-medium text-sm text-gray-700">Meta Description (Descrição da Página)</label>
+                                        <textarea id="meta_description" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" v-model="form.meta_description" rows="3" placeholder="Insira uma descrição resumida de até 160 caracteres"></textarea>
+                                        <div v-if="form.errors.meta_description" class="text-sm text-red-600 mt-1">{{ form.errors.meta_description }}</div>
+                                    </div>
+                                    <div>
+                                        <label for="meta_keywords" class="block font-medium text-sm text-gray-700">Meta Keywords (Palavras-chave separadas por vírgula)</label>
+                                        <input id="meta_keywords" type="text" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm" v-model="form.meta_keywords" placeholder="Ex: quem somos, instituicional, brindes" />
+                                        <div v-if="form.errors.meta_keywords" class="text-sm text-red-600 mt-1">{{ form.errors.meta_keywords }}</div>
+                                    </div>
+                                </div>
                             </div>
 
                             <!-- Botões de Ação -->

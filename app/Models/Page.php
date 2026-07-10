@@ -16,6 +16,9 @@ class Page extends Model
         'content',
         'custom_css',
         'is_active',
+        'meta_title',
+        'meta_description',
+        'meta_keywords',
     ];
 
     /**
