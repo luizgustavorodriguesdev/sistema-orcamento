@@ -393,3 +393,10 @@ watch(() => page.props.flash?.success, (newValue) => {
         </div>
     </AuthenticatedLayout>
 </template>
+
+<style scoped>
+input, textarea, select {
+    color: #0f172a !important;
+    background-color: #ffffff !important;
+}
+</style>

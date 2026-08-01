@@ -1,10 +1,18 @@
 import '../css/app.css';
 import './bootstrap';
 
-import { createInertiaApp } from '@inertiajs/vue3';
+import { createInertiaApp, router } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { createApp, h } from 'vue';
 import { ZiggyVue } from '../../vendor/tightenco/ziggy';
+
+router.on('before', (event) => {
+    if (event.detail.visit.method.toLowerCase() === 'delete') {
+        if (!confirm('Deseja realmente excluir este item? Esta ação não pode ser desfeita.')) {
+            event.preventDefault();
+        }
+    }
+});
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 

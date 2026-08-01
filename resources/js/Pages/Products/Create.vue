@@ -20,7 +20,11 @@ const form = useForm({
     name: '',          // Valor inicial para o nome do produto
     description: '',   // Valor inicial para a descrição
     price: null,       // Valor inicial para o preço
+    cost_price: null,  // Preço de custo
     promotional_price: null, // Valor inicial para o preço promocional
+    track_stock: false, // Habilitar controle de estoque
+    stock_quantity: 0,  // Quantidade inicial
+    minimum_stock: 0,   // Estoque mínimo de segurança
     category_id: null, // Valor inicial para o ID da categoria
     main_image: null,
     gallery_images: [],
@@ -127,20 +131,49 @@ const submit = () => {
                                 <p v-if="form.errors.description" class="text-sm text-red-600 mt-2">{{ form.errors.description }}</p>
                             </div>
 
-                            
-                             <!-- Campos de Preço + Promoção    -->
-                            <div class="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6">
-                                <div>
-                                    <label for="price" class="block font-medium text-sm text-gray-700">Preço Normal (R$)</label>
-                                    <input id="price" type="number" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" v-model="form.price" required />
-                                    <p v-if="form.errors.price" class="text-sm text-red-600 mt-2">{{ form.errors.price }}</p>
-                                </div>
-                                <div>
-                                    <label for="promotional_price" class="block font-medium text-sm text-gray-700">Preço Promocional (Opcional)</label>
-                                    <input id="promotional_price" type="number" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" v-model="form.promotional_price" />
-                                    <p v-if="form.errors.promotional_price" class="text-sm text-red-600 mt-2">{{ form.errors.promotional_price }}</p>
-                                </div>
-                            </div>
+                             <!-- Campos de Preço + Promoção -->
+                             <div class="mt-4 grid grid-cols-1 md:grid-cols-3 gap-6">
+                                 <div>
+                                     <label for="price" class="block font-medium text-sm text-gray-700">Preço Venda (R$)</label>
+                                     <input id="price" type="number" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" v-model="form.price" required />
+                                     <p v-if="form.errors.price" class="text-sm text-red-600 mt-2">{{ form.errors.price }}</p>
+                                 </div>
+                                 <div>
+                                     <label for="cost_price" class="block font-medium text-sm text-gray-700">Preço de Custo (R$)</label>
+                                     <input id="cost_price" type="number" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" v-model="form.cost_price" required />
+                                     <p v-if="form.errors.cost_price" class="text-sm text-red-600 mt-2">{{ form.errors.cost_price }}</p>
+                                 </div>
+                                 <div>
+                                     <label for="promotional_price" class="block font-medium text-sm text-gray-700">Preço Promocional (Opcional)</label>
+                                     <input id="promotional_price" type="number" step="0.01" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" v-model="form.promotional_price" />
+                                     <p v-if="form.errors.promotional_price" class="text-sm text-red-600 mt-2">{{ form.errors.promotional_price }}</p>
+                                 </div>
+                             </div>
+
+                             <!-- Controle de Estoque -->
+                             <div class="mt-6 pt-6 border-t border-gray-100">
+                                 <h3 class="text-lg font-medium text-gray-950 mb-3">Estoque do Produto</h3>
+                                 <div class="space-y-4 bg-slate-50/50 border border-slate-100 rounded-2xl p-5">
+                                     <div class="flex items-center">
+                                         <label class="inline-flex items-center cursor-pointer">
+                                             <input type="checkbox" v-model="form.track_stock" class="rounded border-slate-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50" />
+                                             <span class="ms-2 text-sm text-slate-700 font-semibold">Ativar controle de estoque para este produto</span>
+                                         </label>
+                                     </div>
+                                     <div v-if="form.track_stock" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                         <div>
+                                             <label for="stock_quantity" class="block font-medium text-sm text-slate-700">Quantidade em Estoque Inicial</label>
+                                             <input id="stock_quantity" type="number" min="0" class="mt-1 block w-full rounded-xl border-slate-300 bg-white shadow-sm text-sm" v-model.number="form.stock_quantity" :required="form.track_stock" />
+                                             <p v-if="form.errors.stock_quantity" class="text-sm text-rose-600 mt-2">{{ form.errors.stock_quantity }}</p>
+                                         </div>
+                                         <div>
+                                             <label for="minimum_stock" class="block font-medium text-sm text-slate-700">Estoque Mínimo de Segurança</label>
+                                             <input id="minimum_stock" type="number" min="0" class="mt-1 block w-full rounded-xl border-slate-300 bg-white shadow-sm text-sm" v-model.number="form.minimum_stock" :required="form.track_stock" />
+                                             <p v-if="form.errors.minimum_stock" class="text-sm text-rose-600 mt-2">{{ form.errors.minimum_stock }}</p>
+                                         </div>
+                                     </div>
+                                 </div>
+                             </div>
 
                             <!-- Secção de Escalas de Preços -->
                             <div class="mt-6 pt-6 border-t">

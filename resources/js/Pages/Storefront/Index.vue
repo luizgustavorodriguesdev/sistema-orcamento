@@ -11,6 +11,7 @@ const props = defineProps({
     featuredCategories: Array,
     selectedCategoryId: [String, Number],
     banners: Array,
+    activePopup: Object,
 });
 
 // --- LÓGICA DO CARROSSEL DE BANNERS ---
@@ -39,14 +40,66 @@ const resetAutoplay = () => {
     carouselInterval = setInterval(nextSlide, 5000);
 };
 
+// --- LÓGICA DO POPUP PROMOCIONAL ---
+const showPromoPopup = ref(false);
+const countdown = ref({ days: 0, hours: 0, minutes: 0, seconds: 0 });
+let countdownInterval = null;
+
+const startCountdown = (endTimeStr) => {
+    if (!endTimeStr) return;
+    const targetTime = new Date(endTimeStr).getTime();
+
+    const updateTimer = () => {
+        const now = new Date().getTime();
+        const diff = targetTime - now;
+
+        if (diff <= 0) {
+            countdown.value = { days: 0, hours: 0, minutes: 0, seconds: 0 };
+            if (countdownInterval) clearInterval(countdownInterval);
+            return;
+        }
+
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+        const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+        const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+        countdown.value = { days, hours, minutes, seconds };
+    };
+
+    updateTimer();
+    countdownInterval = setInterval(updateTimer, 1000);
+};
+
+const closePromoPopup = () => {
+    showPromoPopup.value = false;
+    if (props.activePopup) {
+        sessionStorage.setItem('promo_popup_closed_' + props.activePopup.id, 'true');
+    }
+};
+
 onMounted(() => {
     if (props.banners && props.banners.length > 1) {
         resetAutoplay();
+    }
+
+    if (props.activePopup) {
+        const closed = sessionStorage.getItem('promo_popup_closed_' + props.activePopup.id);
+        if (!closed) {
+            setTimeout(() => {
+                showPromoPopup.value = true;
+            }, 800);
+
+            if (props.activePopup.has_countdown && props.activePopup.countdown_end) {
+                startCountdown(props.activePopup.countdown_end);
+            }
+        }
     }
 });
 
 onUnmounted(() => {
     if (carouselInterval) clearInterval(carouselInterval);
+    if (countdownInterval) clearInterval(countdownInterval);
 });
 
 // --- LINK DO WHATSAPP DE ACORDO COM O PRODUTO ---
@@ -565,8 +618,9 @@ const openDropdown = ref(null);
                         :href="route('storefront.product.show', { product: product.slug })"
                         class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden flex flex-col justify-between group hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1 relative"
                     >
-                        <!-- Badge de Destaque / Promoção -->
-                        <span v-if="product.promotional_price" class="absolute top-4 left-4 bg-rose-600 text-white font-bold text-xxs px-2.5 py-1 rounded-full uppercase tracking-wider z-10 shadow">Oferta</span>
+                        <!-- Badge de Destaque / Promoção / Estoque -->
+                        <span v-if="product.track_stock && product.stock_quantity <= 0" class="absolute top-4 left-4 bg-rose-700 text-white font-bold text-xxs px-2.5 py-1 rounded-full uppercase tracking-wider z-10 shadow">Esgotado</span>
+                        <span v-else-if="product.promotional_price" class="absolute top-4 left-4 bg-rose-600 text-white font-bold text-xxs px-2.5 py-1 rounded-full uppercase tracking-wider z-10 shadow">Oferta</span>
                         <span v-else class="absolute top-4 left-4 bg-slate-900 text-slate-100 font-bold text-xxs px-2.5 py-1 rounded-full uppercase tracking-wider z-10 shadow">Destaque</span>
 
                         <!-- Botão Favoritar (Coração Local) -->
@@ -612,9 +666,14 @@ const openDropdown = ref(null);
                                         R$ {{ parseFloat(product.price).toFixed(2) }}
                                     </span>
                                 </div>
-                                <button @click="addToCart(product, $event)" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2.5 px-4 rounded-xl transition-all duration-200 text-xs flex items-center justify-center gap-1.5 shadow-sm">
+                                <button 
+                                    @click="addToCart(product, $event)" 
+                                    :disabled="product.track_stock && product.stock_quantity <= 0"
+                                    class="w-full font-bold py-2.5 px-4 rounded-xl transition-all duration-200 text-xs flex items-center justify-center gap-1.5 shadow-sm"
+                                    :class="product.track_stock && product.stock_quantity <= 0 ? 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-350' : 'bg-blue-600 hover:bg-blue-700 text-white'"
+                                >
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                    <span>Adicionar ao orçamento</span>
+                                    <span>{{ product.track_stock && product.stock_quantity <= 0 ? 'Sem estoque' : 'Adicionar ao orçamento' }}</span>
                                 </button>
                                 
                                 <a 
@@ -860,6 +919,80 @@ const openDropdown = ref(null);
 
         <!-- Botão WhatsApp Flutuante -->
         <FloatingWhatsapp :settings="settings" />
+
+        <!-- POPUP PROMOCIONAL DINÂMICO -->
+        <transition
+            enter-active-class="transition duration-300 ease-out"
+            enter-from-class="opacity-0 scale-95"
+            enter-to-class="opacity-100 scale-100"
+            leave-active-class="transition duration-200 ease-in"
+            leave-from-class="opacity-100 scale-100"
+            leave-to-class="opacity-0 scale-95"
+        >
+            <div v-if="showPromoPopup && activePopup" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
+                <!-- Backdrop Clique para fechar -->
+                <div class="absolute inset-0" @click="closePromoPopup"></div>
+
+                <!-- Card de Conteúdo -->
+                <div class="relative bg-white rounded-3xl shadow-2xl overflow-hidden max-w-2xl w-full border border-slate-100 flex flex-col md:flex-row transform transition-all duration-300 z-10">
+                    <!-- Botão Fechar -->
+                    <button 
+                        @click="closePromoPopup" 
+                        class="absolute top-4 right-4 bg-white/80 hover:bg-slate-100 text-slate-500 hover:text-slate-800 rounded-full p-2 z-20 shadow transition-colors"
+                        aria-label="Fechar popup"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+
+                    <!-- Foto Lateral do Popup -->
+                    <div v-if="activePopup.image_path" class="w-full md:w-1/2 min-h-[220px] md:min-h-[350px] relative bg-slate-100">
+                        <img :src="`/storage/${activePopup.image_path}`" :alt="activePopup.title" class="absolute inset-0 w-full h-full object-cover" />
+                    </div>
+
+                    <!-- Conteúdo do Popup -->
+                    <div class="p-6 md:p-8 flex-grow flex flex-col justify-center space-y-5" :class="activePopup.image_path ? 'w-full md:w-1/2' : 'w-full'">
+                        <div class="space-y-2">
+                            <span class="text-xxs font-black tracking-widest text-rose-600 uppercase">Oferta Especial</span>
+                            <h3 class="text-xl sm:text-2xl font-black text-slate-900 leading-tight">{{ activePopup.title }}</h3>
+                            <p v-if="activePopup.description" class="text-xs text-slate-500 leading-relaxed">{{ activePopup.description }}</p>
+                        </div>
+
+                        <!-- Contador de Tempo (Opcional) -->
+                        <div v-if="activePopup.has_countdown" class="bg-amber-50/70 border border-amber-200/50 rounded-2xl p-4 space-y-2">
+                            <span class="block text-center text-xxs font-bold text-amber-800 uppercase tracking-wider">A promoção termina em:</span>
+                            <div class="grid grid-cols-4 gap-2 text-center">
+                                <div class="bg-white rounded-xl p-2 shadow-xs">
+                                    <span class="block text-base sm:text-lg font-black text-amber-900">{{ countdown.days }}</span>
+                                    <span class="block text-[9px] text-amber-700 uppercase font-semibold">Dias</span>
+                                </div>
+                                <div class="bg-white rounded-xl p-2 shadow-xs">
+                                    <span class="block text-base sm:text-lg font-black text-amber-900">{{ countdown.hours }}</span>
+                                    <span class="block text-[9px] text-amber-700 uppercase font-semibold">Horas</span>
+                                </div>
+                                <div class="bg-white rounded-xl p-2 shadow-xs">
+                                    <span class="block text-base sm:text-lg font-black text-amber-900">{{ countdown.minutes }}</span>
+                                    <span class="block text-[9px] text-amber-700 uppercase font-semibold">Min</span>
+                                </div>
+                                <div class="bg-white rounded-xl p-2 shadow-xs">
+                                    <span class="block text-base sm:text-lg font-black text-amber-900">{{ countdown.seconds }}</span>
+                                    <span class="block text-[9px] text-amber-700 uppercase font-semibold">Seg</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Botão CTA -->
+                        <div v-if="activePopup.button_text && activePopup.button_link">
+                            <a 
+                                :href="activePopup.button_link" 
+                                class="block w-full text-center bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs py-3 px-6 rounded-2xl shadow-md hover:shadow-lg transition-all"
+                            >
+                                {{ activePopup.button_text }}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </transition>
     </div>
 </template>
 

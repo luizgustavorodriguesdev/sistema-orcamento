@@ -128,6 +128,15 @@ class QuoteController extends Controller
             ];
         }
 
+        $oldStatus = $quote->status;
+        $newStatus = $validated['status'];
+
+        if ($oldStatus === 'Aprovado' && $newStatus !== 'Aprovado') {
+            \App\Services\StockService::replenishStockForQuote($quote);
+        } elseif ($oldStatus === 'Aprovado' && $newStatus === 'Aprovado') {
+            \App\Services\StockService::syncStockForQuoteUpdate($quote, $itemsToSync);
+        }
+
         $quote->update([
             'client_id' => $validated['client_id'],
             'payment_terms' => $validated['payment_terms'],
@@ -144,6 +153,10 @@ class QuoteController extends Controller
         ]);
 
         $quote->products()->sync($itemsToSync);
+
+        if ($oldStatus !== 'Aprovado' && $newStatus === 'Aprovado') {
+            \App\Services\StockService::deductStockForQuote($quote);
+        }
 
         return redirect()->route('quotes.index')->with('success', 'Orçamento atualizado com sucesso!');
     }

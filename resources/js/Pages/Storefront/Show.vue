@@ -351,7 +351,16 @@ const openDropdown = ref(null);
                         <div class="flex flex-col justify-between">
                             <div class="space-y-6">
                                 <div>
-                                    <span v-if="product.category" class="inline-block bg-blue-50 text-blue-600 text-xs font-bold px-3 py-1 rounded-full border border-blue-100/50 mb-3">{{ product.category.name }}</span>
+                                    <div class="flex items-center gap-2 mb-3">
+                                        <span v-if="product.category" class="bg-blue-50 text-blue-600 text-xs font-bold px-3 py-1 rounded-full border border-blue-100/50">{{ product.category.name }}</span>
+                                        <span 
+                                            v-if="product.track_stock" 
+                                            class="text-xs font-black px-3 py-1 rounded-full border shadow-xxs uppercase tracking-wider"
+                                            :class="product.stock_quantity > 0 ? 'bg-emerald-50 text-emerald-700 border-emerald-100' : 'bg-rose-50 text-rose-700 border-rose-100'"
+                                        >
+                                            {{ product.stock_quantity > 0 ? `Disponível: ${product.stock_quantity} un` : 'Indisponível (Sem Estoque)' }}
+                                        </span>
+                                    </div>
                                     <h1 class="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight leading-tight">{{ product.name }}</h1>
                                     
                                     <!-- Avaliações Decorativas -->
@@ -414,9 +423,14 @@ const openDropdown = ref(null);
 
                             <!-- Botões de Ação -->
                             <div class="pt-8">
-                                <button @click="addToCart(product)" class="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white py-4 px-8 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2 hover:-translate-y-0.5">
+                                <button 
+                                    @click="addToCart(product)" 
+                                    :disabled="product.track_stock && product.stock_quantity <= 0"
+                                    class="w-full py-4 px-8 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all flex items-center justify-center gap-2"
+                                    :class="product.track_stock && product.stock_quantity <= 0 ? 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-300' : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white hover:-translate-y-0.5'"
+                                >
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" /></svg>
-                                    <span>Adicionar ao Carrinho de Orçamento</span>
+                                    <span>{{ product.track_stock && product.stock_quantity <= 0 ? 'Produto Indisponível (Sem Estoque)' : 'Adicionar ao Carrinho de Orçamento' }}</span>
                                 </button>
                             </div>
                         </div>

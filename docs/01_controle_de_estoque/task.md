@@ -1,0 +1,13 @@
+- [x] Create database migration for products and stock_movements
+- [x] Create Eloquent Model StockMovement
+- [x] Create StockService
+- [x] Integrate stock logic into QuoteController
+- [x] Create StockController
+- [x] Register routes in routes/web.php
+- [x] Add navigation item in AuthenticatedLayout.vue
+- [x] Update Products/Create.vue
+- [x] Update Products/Edit.vue
+- [x] Create Stock/Index.vue
+- [x] Update storefront template views (Index.vue, Category.vue, Search.vue, Show.vue, Cart.vue)
+- [x] Run npm run build to compile assets
+- [x] Create documentation files in docs/01_controle_de_estoque

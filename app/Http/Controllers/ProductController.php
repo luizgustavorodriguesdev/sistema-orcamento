@@ -15,6 +15,7 @@ use Inertia\Response;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use App\Services\StockService;
 
 class ProductController extends Controller
 {
@@ -72,6 +73,10 @@ class ProductController extends Controller
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:1000',
             'meta_keywords' => 'nullable|string|max:255',
+            'track_stock' => 'nullable|boolean',
+            'stock_quantity' => 'nullable|integer|min:0',
+            'minimum_stock' => 'nullable|integer|min:0',
+            'cost_price' => 'nullable|numeric|min:0',
         ]);
 
 
@@ -79,7 +84,24 @@ class ProductController extends Controller
         DB::transaction(function () use ($request, $validated) {
             // Gera o slug a partir do nome
             $validated['slug'] = Str::slug($validated['name']);
+            $validated['track_stock'] = $request->boolean('track_stock');
+            
+            // Inicializa quantidade consolidada a zero, pois a carga de estoque será feita via StockService
+            $initialStock = (int) ($request->input('stock_quantity', 0) ?? 0);
+            $validated['stock_quantity'] = 0;
+            $validated['minimum_stock'] = (int) ($request->input('minimum_stock', 0) ?? 0);
+            $validated['cost_price'] = (float) ($request->input('cost_price', 0.00) ?? 0.00);
+            
             $product = Product::create($validated);
+
+            if ($validated['track_stock'] && $initialStock > 0) {
+                StockService::adjustStock(
+                    $product,
+                    $initialStock,
+                    'addition',
+                    'Carga de estoque inicial'
+                );
+            }
 
             // Sincroniza os relacionamentos Many-to-Many
             if ($request->has('themes')) {
@@ -166,12 +188,36 @@ class ProductController extends Controller
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:1000',
             'meta_keywords' => 'nullable|string|max:255',
+            'track_stock' => 'nullable|boolean',
+            'stock_quantity' => 'nullable|integer|min:0',
+            'minimum_stock' => 'nullable|integer|min:0',
+            'cost_price' => 'nullable|numeric|min:0',
         ]);
 
         DB::transaction(function () use ($request, $product, $validated) {
             // Gera o slug a partir do nome
             $validated['slug'] = Str::slug($validated['name']);
+            $validated['track_stock'] = $request->boolean('track_stock');
+            $validated['minimum_stock'] = (int) ($request->input('minimum_stock', 0) ?? 0);
+            $validated['cost_price'] = (float) ($request->input('cost_price', 0.00) ?? 0.00);
+
+            $oldStock = (int) $product->stock_quantity;
+            $newStock = (int) ($request->input('stock_quantity', 0) ?? 0);
+            $diff = $newStock - $oldStock;
+
+            // Impede a atualização direta de stock_quantity no model principal, ela é calculada via adjustStock
+            unset($validated['stock_quantity']);
+
             $product->update($validated);
+
+            if ($product->track_stock && $diff !== 0) {
+                StockService::adjustStock(
+                    $product,
+                    $diff,
+                    'adjustment',
+                    'Ajuste via edição de produto'
+                );
+            }
 
             // Sincroniza os relacionamentos Many-to-Many
             $product->themes()->sync($request->themes ?? []);

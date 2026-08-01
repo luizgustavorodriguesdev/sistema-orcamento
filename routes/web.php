@@ -17,6 +17,12 @@ use App\Http\Controllers\PersonalizationTypeController;
 use App\Http\Controllers\ColorController;
 use App\Http\Controllers\CharacteristicController;
 use App\Http\Controllers\BannerController;
+use App\Http\Controllers\PromotionPopupController;
+use App\Http\Controllers\StockController;
+use App\Http\Controllers\WarehouseController;
+use App\Http\Controllers\SupplierController;
+use App\Http\Controllers\PurchaseOrderController;
+use App\Http\Controllers\InventoryController;
 use App\Models\Quote;
 use App\Models\Product;
 use App\Models\Client;
@@ -90,8 +96,31 @@ Route::middleware('auth')->group(function () {
     Route::resource('menu-items', MenuItemController::class);
     Route::resource('pages', PageController::class);
     Route::resource('banners', BannerController::class);
+    Route::resource('promotion-popups', PromotionPopupController::class);
     Route::resource('media', MediaController::class);
     Route::get('/api/media', [MediaController::class, 'apiIndex'])->name('api.media.index');
+    
+    // Rotas de Controle de Estoque
+    Route::get('/stock', [StockController::class, 'index'])->name('stock.index');
+    Route::post('/stock/manual-movement', [StockController::class, 'manualMovement'])->name('stock.manual-movement');
+    Route::post('/stock/{product}/adjust', [StockController::class, 'adjust'])->name('stock.adjust');
+
+    // Depósitos e Fornecedores
+    Route::resource('warehouses', WarehouseController::class);
+    Route::resource('suppliers', SupplierController::class);
+
+    // Ordens de Compra
+    Route::get('/purchase-orders/suggestions', [PurchaseOrderController::class, 'suggestions'])->name('purchase-orders.suggestions');
+    Route::post('/purchase-orders/suggestions/generate', [PurchaseOrderController::class, 'generateFromSuggestions'])->name('purchase-orders.suggestions.generate');
+    Route::get('/purchase-orders/{purchase_order}/checkin', [PurchaseOrderController::class, 'checkinForm'])->name('purchase-orders.checkin.form');
+    Route::post('/purchase-orders/{purchase_order}/checkin', [PurchaseOrderController::class, 'checkin'])->name('purchase-orders.checkin');
+    Route::resource('purchase-orders', PurchaseOrderController::class);
+
+    // Inventários e Reconciliação
+    Route::post('/inventory/{inventory}/reconcile', [InventoryController::class, 'reconcile'])->name('inventory.reconcile');
+    Route::post('/inventory/{inventory}/save-counts', [InventoryController::class, 'saveCounts'])->name('inventory.save-counts');
+    Route::post('/inventory/{inventory}/cancel', [InventoryController::class, 'cancel'])->name('inventory.cancel');
+    Route::resource('inventory', InventoryController::class)->parameters(['inventory' => 'inventory']);
     
     // Rota para apagar imagens de produtos
     Route::delete('/product-images/{productImage}', [ProductController::class, 'destroyImage'])->name('products.images.destroy');

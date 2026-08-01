@@ -1,11 +1,44 @@
 <script setup>
-import { ref } from 'vue';
+import { ref, watch } from 'vue';
 import ApplicationLogo from '@/Components/ApplicationLogo.vue';
 import Dropdown from '@/Components/Dropdown.vue';
 import DropdownLink from '@/Components/DropdownLink.vue';
-import { Link } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 
 const sidebarOpen = ref(false);
+
+const page = usePage();
+const toast = ref({
+    show: false,
+    message: '',
+    type: 'success'
+});
+
+let toastTimeout = null;
+
+const showToast = (message, type = 'success') => {
+    toast.value.message = message;
+    toast.value.type = type;
+    toast.value.show = true;
+
+    if (toastTimeout) clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(() => {
+        toast.value.show = false;
+    }, 4000);
+};
+
+// watch for flash messages
+watch(
+    () => page.props.flash,
+    (flash) => {
+        if (flash?.success) {
+            showToast(flash.success, 'success');
+        } else if (flash?.error) {
+            showToast(flash.error, 'error');
+        }
+    },
+    { deep: true, immediate: true }
+);
 </script>
 
 <template>
@@ -112,6 +145,24 @@ const sidebarOpen = ref(false);
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-4-5 w-4-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 5a1 1 0 01.3-.7l5-5a1 1 0 011.4 0l5 5a1 1 0 01.3.7V19a2 2 0 01-2 2H6a2 2 0 01-2-2V5z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 11H10M14 15H10" /></svg>
                             <span>Banners (Slider)</span>
+                        </Link>
+
+                        <Link 
+                            :href="route('promotion-popups.index')" 
+                            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all"
+                            :class="route().current('promotion-popups.*') ? 'bg-blue-600 text-white shadow-md shadow-blue-900/30' : 'hover:bg-slate-800 text-slate-400 hover:text-slate-200'"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4-5 w-4-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.02 6.02 0 00-4.902-5.903m0 0A3.001 3.001 0 1121.306 9h.094M12 21h4c0 1.105-.895 2-2 2s-2-.895-2-2z" /></svg>
+                            <span>Popups Promocionais</span>
+                        </Link>
+
+                        <Link 
+                            :href="route('stock.index')" 
+                            class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold transition-all"
+                            :class="route().current('stock.*') ? 'bg-blue-600 text-white shadow-md shadow-blue-900/30' : 'hover:bg-slate-800 text-slate-400 hover:text-slate-200'"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4-5 w-4-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" /></svg>
+                            <span>Controle de Estoque</span>
                         </Link>
                     </div>
 
@@ -282,6 +333,30 @@ const sidebarOpen = ref(false);
                 </div>
             </footer>
         </div>
+
+        <!-- Floating Toast Notification -->
+        <transition
+            enter-active-class="transform ease-out duration-300 transition"
+            enter-from-class="translate-y-2 opacity-0 sm:translate-y-0 sm:translate-x-2"
+            enter-to-class="translate-y-0 opacity-100 sm:translate-x-0"
+            leave-active-class="transition ease-in duration-100"
+            leave-from-class="opacity-100"
+            leave-to-class="opacity-0"
+        >
+            <div v-if="toast.show" class="fixed bottom-5 right-5 z-55 max-w-sm w-full bg-slate-900 border border-slate-800 rounded-2xl shadow-2xl p-4 flex items-start gap-3">
+                <div class="p-1 rounded-lg" :class="toast.type === 'success' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-rose-500/10 text-rose-500'">
+                    <svg v-if="toast.type === 'success'" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                </div>
+                <div class="flex-grow">
+                    <p class="text-xs font-black text-white capitalize">{{ toast.type === 'success' ? 'Sucesso' : 'Erro' }}</p>
+                    <p class="text-xxs text-slate-300 font-semibold mt-0.5 leading-relaxed">{{ toast.message }}</p>
+                </div>
+                <button @click="toast.show = false" class="text-slate-500 hover:text-white transition-colors">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                </button>
+            </div>
+        </transition>
     </div>
 </template>
 

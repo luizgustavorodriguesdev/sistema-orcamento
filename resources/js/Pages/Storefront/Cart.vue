@@ -44,8 +44,15 @@ const getPriceForQuantity = (item) => {
 const updateQuantity = (productId, newQuantity) => {
     const item = cart.value.find(p => p.id === productId);
     if (item) {
-        const qty = parseInt(newQuantity, 10);
-        item.quantity = isNaN(qty) ? 1 : Math.max(1, qty);
+        let qty = parseInt(newQuantity, 10);
+        if (isNaN(qty)) qty = 1;
+        qty = Math.max(1, qty);
+        
+        if (item.track_stock) {
+            qty = Math.min(qty, item.stock_quantity ?? 0);
+        }
+        
+        item.quantity = qty;
     }
 };
 
@@ -332,6 +339,7 @@ const openDropdown = ref(null);
                                         <div>
                                             <h3 class="font-bold text-slate-900 text-sm">{{ item.name }}</h3>
                                             <p class="text-xs text-slate-400 mt-1">Preço unitário: <span class="font-bold text-blue-600">{{ formatCurrency(getPriceForQuantity(item)) }}</span></p>
+                                            <p v-if="item.track_stock" class="text-[10px] text-emerald-600 font-semibold mt-0.5">Estoque: {{ item.stock_quantity }} un.</p>
                                         </div>
                                     </div>
                                     
@@ -345,6 +353,7 @@ const openDropdown = ref(null);
                                                 @input="updateQuantity(item.id, $event.target.value)"
                                                 class="w-20 bg-slate-50 border-slate-200 text-slate-800 text-center text-sm font-bold rounded-xl focus:ring-blue-500 focus:border-blue-500 p-2"
                                                 min="1"
+                                                :max="item.track_stock ? item.stock_quantity : undefined"
                                             >
                                         </div>
                                         

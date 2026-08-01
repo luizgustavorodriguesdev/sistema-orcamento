@@ -519,7 +519,8 @@ const openDropdown = ref(null);
                                 <div v-for="product in products.data" :key="product.id" class="bg-white rounded-2xl border border-slate-100 overflow-hidden shadow-sm hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 relative flex flex-col justify-between group">
                                     <!-- Badges -->
                                     <div class="absolute top-3 left-3 z-10 flex flex-col gap-1.5">
-                                        <span v-if="product.promotional_price" class="bg-rose-600 text-white text-xxs font-black px-2.5 py-1 rounded-lg shadow-sm uppercase tracking-wider">Promoção</span>
+                                        <span v-if="product.track_stock && product.stock_quantity <= 0" class="bg-rose-700 text-white text-xxs font-black px-2.5 py-1 rounded-lg shadow-sm uppercase tracking-wider">Esgotado</span>
+                                        <span v-else-if="product.promotional_price" class="bg-rose-600 text-white text-xxs font-black px-2.5 py-1 rounded-lg shadow-sm uppercase tracking-wider">Promoção</span>
                                         <span v-else class="bg-slate-900 text-white text-xxs font-black px-2.5 py-1 rounded-lg shadow-sm uppercase tracking-wider">Premium</span>
                                     </div>
 
@@ -569,10 +570,12 @@ const openDropdown = ref(null);
 
                                             <button 
                                                 @click="addToCart(product, $event)" 
-                                                class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-xl transition-all duration-200 text-xs flex items-center justify-center gap-1.5 shadow-sm"
+                                                :disabled="product.track_stock && product.stock_quantity <= 0"
+                                                class="w-full font-bold py-2 px-4 rounded-xl transition-all duration-200 text-xs flex items-center justify-center gap-1.5 shadow-sm"
+                                                :class="product.track_stock && product.stock_quantity <= 0 ? 'bg-slate-200 text-slate-400 cursor-not-allowed border border-slate-350' : 'bg-blue-600 hover:bg-blue-700 text-white'"
                                             >
                                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-                                                <span>Adicionar ao orçamento</span>
+                                                <span>{{ product.track_stock && product.stock_quantity <= 0 ? 'Sem estoque' : 'Adicionar ao orçamento' }}</span>
                                             </button>
 
                                             <a 

@@ -16,6 +16,7 @@ use App\Models\PaymentMethod;
 use App\Models\MenuItem;
 use App\Models\Page;
 use App\Models\Banner;
+use App\Models\PromotionPopup;
 
 class StorefrontController extends Controller
 {
@@ -73,11 +74,19 @@ class StorefrontController extends Controller
 
         $banners = Banner::where('is_active', true)->orderBy('order')->get();
 
+        $now = now();
+        $activePopup = PromotionPopup::where('is_active', true)
+            ->where('start_date', '<=', $now)
+            ->where('end_date', '>=', $now)
+            ->latest()
+            ->first();
+
         return Inertia::render('Storefront/Index', array_merge($storefrontData, [
             'products' => $products,
             'featuredCategories' => $featuredCategories,
             'selectedCategoryId' => $request->category,
             'banners' => $banners,
+            'activePopup' => $activePopup,
         ]));
     }
 

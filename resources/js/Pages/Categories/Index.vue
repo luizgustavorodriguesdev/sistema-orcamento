@@ -55,8 +55,8 @@ const props = defineProps({
                                              <span v-else class="px-2 py-1 rounded bg-gray-100 text-gray-700 text-xs shadow-sm">Não</span>
                                          </td>
                                          <td class="px-6 py-4">
-                                             <Link :href="route('categories.edit', category.id)" class="font-medium text-blue-600 hover:underline mr-4">Editar</Link>
-                                             <Link :href="route('categories.destroy', category.id)" method="delete" as="button" class="font-medium text-red-600 hover:underline" preserve-scroll>Apagar</Link>
+                                            <Link :href="route('categories.edit', category.id)" class="font-medium text-blue-600 hover:underline mr-4">Editar</Link>
+                                            <Link :href="route('categories.destroy', category.id)" method="delete" as="button" class="font-medium text-red-600 hover:underline" preserve-scroll>Apagar</Link>
                                          </td>
                                      </tr>
                                     <tr v-if="categories.data.length === 0">

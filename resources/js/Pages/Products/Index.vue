@@ -62,7 +62,6 @@ const formatCurrency = (value) => {
                                         </td>
                                         <td class="px-6 py-4">
                                             <Link :href="route('products.edit', product.id)" class="font-medium text-blue-600 hover:underline mr-4">Editar</Link>
-                                            <!-- O método 'delete' faz a requisição correta para a rota de exclusão -->
                                             <Link :href="route('products.destroy', product.id)" method="delete" as="button" class="font-medium text-red-600 hover:underline" preserve-scroll>Deletar</Link>
                                         </td>
                                     </tr>

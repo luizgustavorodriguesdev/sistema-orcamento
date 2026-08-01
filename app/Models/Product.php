@@ -17,11 +17,22 @@ class Product extends Model
         'slug',
         'description',
         'price',
+        'cost_price',
+        'track_stock',
+        'stock_quantity',
+        'minimum_stock',
         'promotional_price',
         'category_id',
         'meta_title',
         'meta_description',
         'meta_keywords',
+    ];
+
+    protected $casts = [
+        'track_stock' => 'boolean',
+        'stock_quantity' => 'integer',
+        'minimum_stock' => 'integer',
+        'cost_price' => 'decimal:2',
     ];
     
     /**
@@ -87,5 +98,15 @@ class Product extends Model
     public function characteristics(): BelongsToMany
     {
         return $this->belongsToMany(Characteristic::class, 'product_characteristic');
+    }
+
+    /**
+     * Depósitos onde este produto é armazenado.
+     */
+    public function warehouses(): BelongsToMany
+    {
+        return $this->belongsToMany(Warehouse::class, 'product_warehouse')
+            ->withPivot('quantity')
+            ->withTimestamps();
     }
 }
