@@ -26,6 +26,7 @@ class Product extends Model
         'meta_title',
         'meta_description',
         'meta_keywords',
+        'show_in_highlighted_menu',
     ];
 
     protected $casts = [
@@ -33,6 +34,7 @@ class Product extends Model
         'stock_quantity' => 'integer',
         'minimum_stock' => 'integer',
         'cost_price' => 'decimal:2',
+        'show_in_highlighted_menu' => 'boolean',
     ];
     
     /**

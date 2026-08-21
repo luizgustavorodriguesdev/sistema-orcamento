@@ -13,6 +13,7 @@ const props = defineProps({
     currentPerPage: [String, Number],
     filterOptions: Object,
     selectedFilters: Object,
+    highlightedMenuItems: Array,
 });
 
 // --- BUSCA NO CABEÇALHO ---
@@ -320,6 +321,21 @@ const openDropdown = ref(null);
                                 </Link>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <!-- MENU EM DESTAQUE (SUB-HEADER) -->
+                <div v-if="highlightedMenuItems && highlightedMenuItems.length > 0" class="border-t border-slate-100 py-2.5 overflow-x-auto scrollbar-none bg-slate-50/50">
+                    <div class="container mx-auto px-4 max-w-6xl flex justify-start md:justify-center items-center gap-6 whitespace-nowrap">
+                        <Link 
+                            v-for="(item, idx) in highlightedMenuItems" 
+                            :key="idx" 
+                            :href="item.url" 
+                            class="text-xs font-bold text-slate-700 hover:text-blue-600 transition-all tracking-wide uppercase px-2.5 py-1 rounded-lg"
+                            :class="item.type === 'product' ? 'bg-blue-600 text-white shadow-sm hover:text-white hover:bg-blue-700' : 'hover:bg-slate-200/50'"
+                        >
+                            {{ item.label }}
+                        </Link>
                     </div>
                 </div>
             </header>

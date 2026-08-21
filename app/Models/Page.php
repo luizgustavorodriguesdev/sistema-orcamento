@@ -19,6 +19,12 @@ class Page extends Model
         'meta_title',
         'meta_description',
         'meta_keywords',
+        'show_in_highlighted_menu',
+    ];
+
+    protected $casts = [
+        'is_active' => 'boolean',
+        'show_in_highlighted_menu' => 'boolean',
     ];
 
     /**

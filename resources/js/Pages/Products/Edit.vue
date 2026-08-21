@@ -40,6 +40,7 @@ const form = useForm({
     meta_title: props.product.meta_title || '',
     meta_description: props.product.meta_description || '',
     meta_keywords: props.product.meta_keywords || '',
+    show_in_highlighted_menu: props.product.show_in_highlighted_menu ?? false,
 });
 
 // --- Lógica para as Escalas de Preços ---
@@ -137,11 +138,9 @@ const galleryImages = props.product.images.filter(img => !img.is_main);
                                         <p v-if="form.errors.promotional_price" class="text-sm text-red-600 mt-2">{{ form.errors.promotional_price }}</p>
                                     </div>
                                 </div>
-                            </div>
-
-                            <!-- Controle de Estoque -->
+                                            <!-- Controle de Estoque -->
                             <div class="mt-6 pt-6 border-t border-gray-100">
-                                <h3 class="text-lg font-medium text-gray-955 mb-3">Estoque do Produto</h3>
+                                <h3 class="text-lg font-medium text-gray-950 mb-3">Estoque do Produto</h3>
                                 <div class="space-y-4 bg-slate-50/50 border border-slate-100 rounded-2xl p-5">
                                     <div class="flex items-center">
                                         <label class="inline-flex items-center cursor-pointer">
@@ -163,6 +162,19 @@ const galleryImages = props.product.images.filter(img => !img.is_main);
                                     </div>
                                 </div>
                             </div>
+
+                            <!-- Destaque do Produto -->
+                            <div class="mt-6 pt-6 border-t border-gray-100">
+                                <h3 class="text-lg font-medium text-gray-950 mb-3">Destaque do Produto</h3>
+                                <div class="space-y-4 bg-slate-50/50 border border-slate-100 rounded-2xl p-5">
+                                    <div class="flex items-center">
+                                        <label class="inline-flex items-center cursor-pointer">
+                                            <input type="checkbox" v-model="form.show_in_highlighted_menu" class="rounded border-slate-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50" />
+                                            <span class="ms-2 text-sm text-slate-700 font-semibold">Exibir no Menu em Destaque</span>
+                                        </label>
+                                    </div>
+                                </div>
+                            </div>                </div>
 
                             <!-- Secção de Escalas de Preços -->
                             <div class="mt-6 pt-6 border-t">

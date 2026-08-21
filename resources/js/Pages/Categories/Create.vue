@@ -7,6 +7,7 @@ const form = useForm({
     name: '',
     description: '',
     is_featured: false,
+    show_in_highlighted_menu: false,
     image: null,
     meta_title: '',
     meta_description: '',
@@ -61,6 +62,15 @@ const submit = () => {
                                      <span class="ms-2 text-sm text-gray-600">Categoria em Destaque (será exibida na Vitrine Principal)</span>
                                  </label>
                                  <p v-if="form.errors.is_featured" class="text-sm text-red-600 mt-2">{{ form.errors.is_featured }}</p>
+                             </div>
+
+                             <!-- Campo Exibir no Menu em Destaque -->
+                             <div class="mt-4">
+                                 <label class="inline-flex items-center">
+                                     <input type="checkbox" v-model="form.show_in_highlighted_menu" class="rounded border-gray-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50" />
+                                     <span class="ms-2 text-sm text-gray-600">Exibir no Menu em Destaque</span>
+                                 </label>
+                                 <p v-if="form.errors.show_in_highlighted_menu" class="text-sm text-red-600 mt-2">{{ form.errors.show_in_highlighted_menu }}</p>
                              </div>
 
                              <!-- Secção de SEO -->

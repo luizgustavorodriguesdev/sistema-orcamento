@@ -36,6 +36,7 @@ const form = useForm({
     meta_title: '',
     meta_description: '',
     meta_keywords: '',
+    show_in_highlighted_menu: false,
 });
 
 // --- Lógica para as Escalas de Preços ---
@@ -171,6 +172,19 @@ const submit = () => {
                                              <input id="minimum_stock" type="number" min="0" class="mt-1 block w-full rounded-xl border-slate-300 bg-white shadow-sm text-sm" v-model.number="form.minimum_stock" :required="form.track_stock" />
                                              <p v-if="form.errors.minimum_stock" class="text-sm text-rose-600 mt-2">{{ form.errors.minimum_stock }}</p>
                                          </div>
+                                     </div>
+                                 </div>
+                             </div>
+
+                             <!-- Destaque do Produto -->
+                             <div class="mt-6 pt-6 border-t border-gray-100">
+                                 <h3 class="text-lg font-medium text-gray-950 mb-3">Destaque do Produto</h3>
+                                 <div class="space-y-4 bg-slate-50/50 border border-slate-100 rounded-2xl p-5">
+                                     <div class="flex items-center">
+                                         <label class="inline-flex items-center cursor-pointer">
+                                             <input type="checkbox" v-model="form.show_in_highlighted_menu" class="rounded border-slate-300 text-blue-600 shadow-sm focus:border-blue-300 focus:ring focus:ring-blue-200 focus:ring-opacity-50" />
+                                             <span class="ms-2 text-sm text-slate-700 font-semibold">Exibir no Menu em Destaque</span>
+                                         </label>
                                      </div>
                                  </div>
                              </div>

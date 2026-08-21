@@ -38,6 +38,7 @@ class CategoryController extends Controller
             'name' => 'required|string|max:255|unique:categories',
             'description' => 'nullable|string',
             'is_featured' => 'nullable|boolean',
+            'show_in_highlighted_menu' => 'nullable|boolean',
             'image' => 'nullable|image|max:2048',
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:1000',
@@ -46,6 +47,7 @@ class CategoryController extends Controller
 
         $data = $request->except('image');
         $data['is_featured'] = $request->boolean('is_featured');
+        $data['show_in_highlighted_menu'] = $request->boolean('show_in_highlighted_menu');
 
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('categories', 'public');
@@ -76,6 +78,7 @@ class CategoryController extends Controller
             'name' => ['required', 'string', 'max:255', Rule::unique('categories')->ignore($category->id)],
             'description' => 'nullable|string',
             'is_featured' => 'nullable|boolean',
+            'show_in_highlighted_menu' => 'nullable|boolean',
             'image' => 'nullable|image|max:2048',
             'meta_title' => 'nullable|string|max:255',
             'meta_description' => 'nullable|string|max:1000',
@@ -84,6 +87,7 @@ class CategoryController extends Controller
 
         $data = $request->except('image');
         $data['is_featured'] = $request->boolean('is_featured');
+        $data['show_in_highlighted_menu'] = $request->boolean('show_in_highlighted_menu');
 
         if ($request->hasFile('image')) {
             if ($category->image_path && \Storage::disk('public')->exists($category->image_path)) {

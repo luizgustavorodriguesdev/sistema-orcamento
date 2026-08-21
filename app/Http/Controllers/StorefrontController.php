@@ -42,10 +42,40 @@ class StorefrontController extends Controller
         $settings = Setting::all()->pluck('value', 'key');
         $categories = Category::orderBy('name')->get();
 
+        $highlightedMenuItems = [];
+        
+        $highlightedCats = Category::where('show_in_highlighted_menu', true)->orderBy('name')->get();
+        foreach ($highlightedCats as $cat) {
+            $highlightedMenuItems[] = [
+                'label' => $cat->name,
+                'url' => route('storefront.category.show', ['category' => $cat->slug]),
+                'type' => 'category'
+            ];
+        }
+
+        $highlightedPages = Page::where('is_active', true)->where('show_in_highlighted_menu', true)->orderBy('title')->get();
+        foreach ($highlightedPages as $page) {
+            $highlightedMenuItems[] = [
+                'label' => $page->title,
+                'url' => route('storefront.page.show', ['page' => $page->slug]),
+                'type' => 'page'
+            ];
+        }
+
+        $highlightedProds = Product::where('show_in_highlighted_menu', true)->orderBy('name')->get();
+        foreach ($highlightedProds as $prod) {
+            $highlightedMenuItems[] = [
+                'label' => $prod->name,
+                'url' => route('storefront.product.show', ['product' => $prod->slug]),
+                'type' => 'product'
+            ];
+        }
+
         return [
             'menuItems' => $menuItems,
             'settings' => $settings,
             'categories' => $categories,
+            'highlightedMenuItems' => $highlightedMenuItems,
         ];
     }
 

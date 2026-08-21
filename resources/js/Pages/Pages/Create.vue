@@ -11,6 +11,7 @@ const form = useForm({
     content: '',
     custom_css: '',
     is_active: true,
+    show_in_highlighted_menu: false,
     meta_title: '',
     meta_description: '',
     meta_keywords: '',
@@ -94,6 +95,19 @@ const onMediaSelect = (media) => {
                                 />
                                 <label for="is_active" class="ml-2 block text-sm font-medium text-gray-900">
                                     Tornar esta página ativa e visível ao público
+                                </label>
+                            </div>
+
+                            <!-- Exibir no Menu em Destaque -->
+                            <div class="flex items-center">
+                                <input 
+                                    v-model="form.show_in_highlighted_menu" 
+                                    type="checkbox" 
+                                    id="show_in_highlighted_menu" 
+                                    class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                                />
+                                <label for="show_in_highlighted_menu" class="ml-2 block text-sm font-medium text-gray-900">
+                                    Exibir no Menu em Destaque
                                 </label>
                             </div>
 

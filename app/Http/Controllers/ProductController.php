@@ -77,6 +77,7 @@ class ProductController extends Controller
             'stock_quantity' => 'nullable|integer|min:0',
             'minimum_stock' => 'nullable|integer|min:0',
             'cost_price' => 'nullable|numeric|min:0',
+            'show_in_highlighted_menu' => 'nullable|boolean',
         ]);
 
 
@@ -85,6 +86,7 @@ class ProductController extends Controller
             // Gera o slug a partir do nome
             $validated['slug'] = Str::slug($validated['name']);
             $validated['track_stock'] = $request->boolean('track_stock');
+            $validated['show_in_highlighted_menu'] = $request->boolean('show_in_highlighted_menu');
             
             // Inicializa quantidade consolidada a zero, pois a carga de estoque será feita via StockService
             $initialStock = (int) ($request->input('stock_quantity', 0) ?? 0);
@@ -192,12 +194,14 @@ class ProductController extends Controller
             'stock_quantity' => 'nullable|integer|min:0',
             'minimum_stock' => 'nullable|integer|min:0',
             'cost_price' => 'nullable|numeric|min:0',
+            'show_in_highlighted_menu' => 'nullable|boolean',
         ]);
 
         DB::transaction(function () use ($request, $product, $validated) {
             // Gera o slug a partir do nome
             $validated['slug'] = Str::slug($validated['name']);
             $validated['track_stock'] = $request->boolean('track_stock');
+            $validated['show_in_highlighted_menu'] = $request->boolean('show_in_highlighted_menu');
             $validated['minimum_stock'] = (int) ($request->input('minimum_stock', 0) ?? 0);
             $validated['cost_price'] = (float) ($request->input('cost_price', 0.00) ?? 0.00);
 
