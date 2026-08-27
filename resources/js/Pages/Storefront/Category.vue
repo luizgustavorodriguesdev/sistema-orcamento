@@ -340,17 +340,65 @@ const openDropdown = ref(null);
                 </div>
 
                 <!-- MENU EM DESTAQUE (SUB-HEADER) -->
-                <div v-if="highlightedMenuItems && highlightedMenuItems.length > 0" class="border-t border-slate-100 py-2.5 overflow-x-auto scrollbar-none bg-slate-50/50">
-                    <div class="container mx-auto px-4 max-w-6xl flex justify-start md:justify-center items-center gap-6 whitespace-nowrap">
-                        <Link 
+                <div v-if="highlightedMenuItems && highlightedMenuItems.length > 0" class="border-t border-slate-100 py-2.5 bg-slate-50/50 overflow-x-auto md:overflow-visible scrollbar-none relative">
+                    <div class="container mx-auto px-4 max-w-6xl flex justify-start md:justify-center items-center gap-6 whitespace-nowrap md:relative">
+                        
+                        <div 
                             v-for="(item, idx) in highlightedMenuItems" 
                             :key="idx" 
-                            :href="item.url" 
-                            class="text-xs font-bold text-slate-700 hover:text-blue-600 transition-all tracking-wide uppercase px-2.5 py-1 rounded-lg"
-                            :class="item.type === 'product' ? 'bg-blue-600 text-white shadow-sm hover:text-white hover:bg-blue-700' : 'hover:bg-slate-200/50'"
+                            class="group"
                         >
-                            {{ item.label }}
-                        </Link>
+                            <Link 
+                                :href="item.url" 
+                                class="text-xs font-bold text-slate-700 hover:text-blue-600 transition-all tracking-wide uppercase px-2.5 py-1 rounded-lg block"
+                                :class="item.type === 'product' ? 'bg-blue-600 text-white shadow-sm hover:text-white hover:bg-blue-700' : 'hover:bg-slate-200/50'"
+                            >
+                                {{ item.label }}
+                            </Link>
+
+                            <!-- MEGA MENU CONTAINER -->
+                            <div 
+                                v-if="item.type === 'category' && ((item.subcategories && item.subcategories.length > 0) || item.mega_menu_banner)"
+                                class="absolute left-4 right-4 top-full z-50 bg-white border border-slate-100 shadow-2xl rounded-b-2xl p-6 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 max-w-6xl mx-auto md:left-4 md:right-4 whitespace-normal"
+                            >
+                                <div class="grid grid-cols-1 md:grid-cols-4 gap-8 text-left">
+                                    <!-- Colunas de Subcategorias -->
+                                    <div class="col-span-1 md:col-span-3">
+                                        <h4 class="text-xs font-black text-slate-400 tracking-wider uppercase mb-4 border-b border-slate-50 pb-2">
+                                            {{ item.label }}
+                                        </h4>
+                                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-2.5">
+                                            <Link 
+                                                v-for="(sub, subIdx) in item.subcategories" 
+                                                :key="subIdx" 
+                                                :href="sub.url"
+                                                class="text-sm font-semibold text-slate-600 hover:text-blue-600 hover:translate-x-1 transition-all block py-0.5"
+                                            >
+                                                {{ sub.label }}
+                                            </Link>
+                                            <Link 
+                                                :href="item.url"
+                                                class="text-sm font-bold text-blue-600 hover:underline block py-0.5"
+                                            >
+                                                Ver Tudo em {{ item.label }} &rarr;
+                                            </Link>
+                                        </div>
+                                    </div>
+
+                                    <!-- Banner Promocional -->
+                                    <div v-if="item.mega_menu_banner" class="col-span-1 md:border-l md:border-slate-100 md:pl-8 flex flex-col justify-center">
+                                        <div class="overflow-hidden rounded-xl shadow-md group/banner relative aspect-[4/3] bg-slate-50">
+                                            <img 
+                                                :src="`/storage/${item.mega_menu_banner}`" 
+                                                alt="Banner Promocional" 
+                                                class="w-full h-full object-cover transition-transform duration-500 group-hover/banner:scale-105"
+                                            />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
                     </div>
                 </div>
             </header>

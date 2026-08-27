@@ -37,6 +37,7 @@ const props = defineProps({
                                      <tr>
                                          <th scope="col" class="px-6 py-3">Imagem</th>
                                          <th scope="col" class="px-6 py-3">Nome</th>
+                                         <th scope="col" class="px-6 py-3">Categoria Pai</th>
                                          <th scope="col" class="px-6 py-3">Descrição</th>
                                          <th scope="col" class="px-6 py-3">Destaque</th>
                                          <th scope="col" class="px-6 py-3">Ações</th>
@@ -49,6 +50,12 @@ const props = defineProps({
                                              <span v-else class="text-xs text-gray-400">Sem imagem</span>
                                          </td>
                                          <td class="px-6 py-4 font-semibold text-gray-900 whitespace-nowrap">{{ category.name }}</td>
+                                         <td class="px-6 py-4">
+                                             <span v-if="category.parent" class="px-2.5 py-1 rounded bg-slate-100 text-slate-800 text-xs font-semibold border border-slate-200">
+                                                 {{ category.parent.name }}
+                                             </span>
+                                             <span v-else class="text-xs text-gray-400">Principal</span>
+                                         </td>
                                          <td class="px-6 py-4">{{ category.description }}</td>
                                          <td class="px-6 py-4">
                                              <span v-if="category.is_featured" class="px-2 py-1 rounded bg-yellow-100 text-yellow-800 text-xs font-bold shadow-sm">Sim</span>
@@ -60,7 +67,7 @@ const props = defineProps({
                                          </td>
                                      </tr>
                                     <tr v-if="categories.data.length === 0">
-                                        <td colspan="5" class="px-6 py-4 text-center text-gray-500">
+                                        <td colspan="6" class="px-6 py-4 text-center text-gray-500">
                                             Nenhuma categoria encontrada.
                                         </td>
                                     </tr>

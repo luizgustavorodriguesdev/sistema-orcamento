@@ -44,12 +44,17 @@ class StorefrontController extends Controller
 
         $highlightedMenuItems = [];
         
-        $highlightedCats = Category::where('show_in_highlighted_menu', true)->orderBy('name')->get();
+        $highlightedCats = Category::with('children')->whereNull('parent_id')->where('show_in_highlighted_menu', true)->orderBy('name')->get();
         foreach ($highlightedCats as $cat) {
             $highlightedMenuItems[] = [
                 'label' => $cat->name,
                 'url' => route('storefront.category.show', ['category' => $cat->slug]),
-                'type' => 'category'
+                'type' => 'category',
+                'mega_menu_banner' => $cat->mega_menu_banner_path,
+                'subcategories' => $cat->children->map(fn($child) => [
+                    'label' => $child->name,
+                    'url' => route('storefront.category.show', ['category' => $child->slug]),
+                ]),
             ];
         }
 

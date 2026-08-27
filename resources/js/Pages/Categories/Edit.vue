@@ -5,6 +5,7 @@ import { Head, useForm } from '@inertiajs/vue3';
 // Recebemos a categoria a ser editada como uma prop.
 const props = defineProps({
     category: Object,
+    parentCategories: Array,
 });
 
 // Preenchemos o formulário com os dados existentes da categoria.
@@ -14,7 +15,9 @@ const form = useForm({
     description: props.category.description,
     is_featured: props.category.is_featured === 1 || props.category.is_featured === true || false,
     show_in_highlighted_menu: props.category.show_in_highlighted_menu === 1 || props.category.show_in_highlighted_menu === true || false,
+    parent_id: props.category.parent_id || '',
     image: null,
+    mega_menu_banner: null,
     meta_title: props.category.meta_title || '',
     meta_description: props.category.meta_description || '',
     meta_keywords: props.category.meta_keywords || '',
@@ -48,6 +51,18 @@ const submit = () => {
                                 <p v-if="form.errors.name" class="text-sm text-red-600 mt-2">{{ form.errors.name }}</p>
                             </div>
 
+                            <!-- Campo Categoria Pai (Para subcategorias) -->
+                            <div class="mt-4">
+                                <label for="parent_id" class="block font-medium text-sm text-gray-700">Categoria Pai (Deixe em branco para Categoria Principal)</label>
+                                <select id="parent_id" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" v-model="form.parent_id">
+                                    <option value="">Nenhuma (Categoria Principal)</option>
+                                    <option v-for="cat in parentCategories" :key="cat.id" :value="cat.id">
+                                        {{ cat.name }}
+                                    </option>
+                                </select>
+                                <p v-if="form.errors.parent_id" class="text-sm text-red-600 mt-2">{{ form.errors.parent_id }}</p>
+                            </div>
+
                              <div class="mt-4">
                                  <label for="description" class="block font-medium text-sm text-gray-700">Descrição (Opcional)</label>
                                  <textarea id="description" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm" v-model="form.description"></textarea>
@@ -62,6 +77,16 @@ const submit = () => {
                                  </div>
                                  <input id="image" type="file" class="mt-1 block w-full border border-gray-300 rounded-md p-1 bg-white" @input="form.image = $event.target.files[0]" />
                                  <p v-if="form.errors.image" class="text-sm text-red-600 mt-2">{{ form.errors.image }}</p>
+                             </div>
+
+                             <!-- Campo Banner do Mega Menu -->
+                             <div v-if="!form.parent_id" class="mt-4">
+                                 <label class="block font-medium text-sm text-gray-700 mb-2">Banner Promocional do Mega Menu (Opcional)</label>
+                                 <div v-if="category.mega_menu_banner_path" class="mb-2">
+                                     <img :src="`/storage/${category.mega_menu_banner_path}`" alt="Banner Atual" class="w-64 h-32 object-cover rounded-md border shadow-sm" />
+                                 </div>
+                                 <input id="mega_menu_banner" type="file" class="mt-1 block w-full border border-gray-300 rounded-md p-1 bg-white" @input="form.mega_menu_banner = $event.target.files[0]" />
+                                 <p v-if="form.errors.mega_menu_banner" class="text-sm text-red-600 mt-2">{{ form.errors.mega_menu_banner }}</p>
                              </div>
 
                              <!-- Campo Destaque -->
